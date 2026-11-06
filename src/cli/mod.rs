@@ -52,6 +52,22 @@ pub fn execute() -> i32 {
         return 0;
     }
 
+    if args.gui {
+        #[cfg(feature = "gui")]
+        {
+            if let Err(e) = crate::gui::run_gui() {
+                eprintln!("Error launching GUI: {}", e);
+                return 1;
+            }
+            return 0;
+        }
+        #[cfg(not(feature = "gui"))]
+        {
+            eprintln!("GUI feature was disabled at compile time. Recompile with --features gui.");
+            return 1;
+        }
+    }
+
     let mut ctrl = MSIKeyboardController::new();
 
     if args.status {
@@ -158,3 +174,4 @@ pub fn execute() -> i32 {
 
     0
 }
+

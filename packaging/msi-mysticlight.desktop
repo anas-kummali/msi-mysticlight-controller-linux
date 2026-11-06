@@ -1,0 +1,25 @@
+[Desktop Entry]
+Name=MSI Mystic Light
+GenericName=Keyboard RGB Controller
+Comment=Manage 24-Zone & 4-Zone MSI MysticLight Keyboards and Themes
+Exec=msi-mysticlight-gui
+Icon=msi-mysticlight
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;Utility;
+Keywords=MSI;MysticLight;RGB;Keyboard;LED;Backlight;OpenRGB;Lightshow;Gaming;
+StartupNotify=true
+StartupWMClass=msi-mysticlight-gui
+Actions=White;Wave;Off;
+
+[Desktop Action White]
+Name=Solid White Backlight
+Exec=msi-mysticlight -c white -B 10
+
+[Desktop Action Wave]
+Name=Rainbow Wave Animation
+Exec=msi-mysticlight -w
+
+[Desktop Action Off]
+Name=Power Off Backlight
+Exec=msi-mysticlight -o

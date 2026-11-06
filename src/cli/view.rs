@@ -22,6 +22,7 @@ Options:
   -r, --row <1..6>           Target a specific physical row (1: Function, 2: Number, 3: Tab/QWERTY, 4: Caps/ASDF, 5: Shift/ZXCV, 6: Space/Ctrl)
   -z, --zone <0..23>         Target a specific individual zone (0..23)
       --status               Display detected hardware node, permission state, and zone map
+  -g, --gui                  Launch native graphical control interface
   -v, --version              Show version information
   -h, --help                 Print this help message
 
@@ -72,3 +73,4 @@ pub fn print_status(info: &DeviceInfo) {
     println!("  - Row 6 (CTRL to CTRL/Nav) : Zones 20..23");
     println!("==================================================");
 }
+

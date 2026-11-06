@@ -14,6 +14,7 @@ pub struct CliArgs {
     pub row: Option<u8>,
     pub zone: Option<u8>,
     pub status: bool,
+    pub gui: bool,
     pub show_version: bool,
     pub show_help: bool,
 }
@@ -30,6 +31,7 @@ impl Default for CliArgs {
             row: None,
             zone: None,
             status: false,
+            gui: false,
             show_version: false,
             show_help: false,
         }
@@ -56,6 +58,8 @@ pub fn parse_from(raw: Vec<String>) -> Result<CliArgs, String> {
             return Ok(args);
         } else if arg == "--status" {
             args.status = true;
+        } else if arg == "--gui" || arg == "-g" {
+            args.gui = true;
         } else if arg == "-o" || arg == "--off" {
             args.off = true;
         } else if arg == "-w" || arg == "--wave" {

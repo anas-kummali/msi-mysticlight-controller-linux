@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN_DIR="${HOME}/.local/bin"
+APP_DIR="${HOME}/.local/share/applications"
+ICON_DIR="${HOME}/.local/share/icons/hicolor/scalable/apps"
 UDEV_DIR="/etc/udev/rules.d"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 
@@ -11,7 +13,7 @@ if [[ -z "${BIN_DIR:-}" || -z "${SCRIPT_DIR:-}" ]]; then
     exit 1
 fi
 
-echo "=== MSI Mystic Light Controller for Linux Installer (Rust Edition) ==="
+echo "=== MSI Mystic Light Controller & GUI Installer (v1.1.0) ==="
 
 # 1. Check Cargo / Rust toolchain
 if ! command -v cargo &>/dev/null; then
@@ -20,17 +22,26 @@ if ! command -v cargo &>/dev/null; then
     exit 1
 fi
 
-# 2. Ensure bin dir exists
-mkdir -p "${BIN_DIR}"
+# 2. Ensure dirs exist
+mkdir -p "${BIN_DIR}" "${APP_DIR}" "${ICON_DIR}"
 
-# 3. Compile and install optimized release binary
-echo "[1/4] Compiling optimized Rust release binary..."
+# 3. Compile and install release binaries
+echo "[1/4] Compiling release binaries (CLI & Native GUI)..."
 cargo build --release --manifest-path "${SCRIPT_DIR}/Cargo.toml" --quiet
 cp -f "${SCRIPT_DIR}/target/release/msi-mysticlight" "${BIN_DIR}/msi-mysticlight"
-chmod 755 "${BIN_DIR}/msi-mysticlight"
+cp -f "${SCRIPT_DIR}/target/release/msi-mysticlight-gui" "${BIN_DIR}/msi-mysticlight-gui"
+chmod 755 "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-mysticlight-gui"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-keyboard"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-rgb"
-echo "      Installed native Rust binary to ${BIN_DIR}/msi-mysticlight (564 KB)."
+
+# Install Desktop Entry and Vector Icon
+cp -f "${SCRIPT_DIR}/packaging/msi-mysticlight.desktop" "${APP_DIR}/"
+cp -f "${SCRIPT_DIR}/packaging/icons/msi-mysticlight.svg" "${ICON_DIR}/"
+if command -v update-desktop-database &>/dev/null; then
+    update-desktop-database -q "${APP_DIR}" 2>/dev/null || true
+fi
+echo "      Installed 'msi-mysticlight' (CLI) and 'msi-mysticlight-gui' (GUI)."
+echo "      Registered desktop launcher and vector icon in application menu."
 
 # 4. Install udev rule for non-root access
 echo "[2/4] Setting up udev rules for non-root USB access..."
@@ -69,11 +80,15 @@ if "${BIN_DIR}/msi-mysticlight" --status; then
     echo ""
     echo "=== Installation Successful! ==="
     echo "Make sure ${BIN_DIR} is in your PATH."
-    echo "Test commands:"
-    echo "  msi-mysticlight -c white -B 10"
-    echo "  msi-mysticlight -w"
-    echo "  msi-mysticlight --status"
-    echo "  (Aliases 'msi-keyboard' and 'msi-rgb' are also available)"
+    echo ""
+    echo "Available commands & tools:"
+    echo "  msi-mysticlight-gui       # Launch native graphical user interface"
+    echo "  msi-mysticlight --gui     # Launch GUI from CLI"
+    echo "  msi-mysticlight -c white  # Set static color across all 24 zones"
+    echo "  msi-mysticlight -w        # Activate rainbow wave effect"
+    echo "  msi-mysticlight --status  # Inspect hardware connectivity"
+    echo ""
+    echo "The application is also accessible in your Desktop Application Menu as 'MSI Mystic Light'."
 else
     echo ""
     echo "Notice: Controller installed. If permission was denied, log out and back in for udev rules to apply."

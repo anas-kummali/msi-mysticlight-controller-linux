@@ -184,3 +184,4 @@ mod tests {
         assert_eq!(info.total_rows, 6);
     }
 }
+

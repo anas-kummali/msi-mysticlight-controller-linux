@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141724" />
+      <stop offset="100%" stop-color="#08090E" />
+    </linearGradient>
+    <linearGradient id="rgbFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF0055" />
+      <stop offset="20%" stop-color="#FF7700" />
+      <stop offset="40%" stop-color="#FFE600" />
+      <stop offset="60%" stop-color="#00FF66" />
+      <stop offset="80%" stop-color="#00E5FF" />
+      <stop offset="100%" stop-color="#9D00FF" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect x="16" y="16" width="224" height="224" rx="48" fill="url(#bgGrad)" stroke="#262A3B" stroke-width="3" />
+
+  <!-- Keyboard Outer Case -->
+  <rect x="36" y="56" width="184" height="144" rx="20" fill="#1A1D2B" stroke="url(#rgbFlow)" stroke-width="4" filter="url(#glow)" />
+
+  <!-- Key Rows: Simulated 24-Zone Layout -->
+  <!-- Row 1 -->
+  <rect x="48" y="70" width="34" height="16" rx="4" fill="#FF0055" />
+  <rect x="88" y="70" width="34" height="16" rx="4" fill="#FF5500" />
+  <rect x="128" y="70" width="34" height="16" rx="4" fill="#00FF66" />
+  <rect x="168" y="70" width="40" height="16" rx="4" fill="#00E5FF" />
+
+  <!-- Row 2 -->
+  <rect x="48" y="92" width="34" height="16" rx="4" fill="#FF1177" />
+  <rect x="88" y="92" width="34" height="16" rx="4" fill="#FFAA00" />
+  <rect x="128" y="92" width="34" height="16" rx="4" fill="#33FF88" />
+  <rect x="168" y="92" width="40" height="16" rx="4" fill="#33CCFF" />
+
+  <!-- Row 3 -->
+  <rect x="48" y="114" width="34" height="16" rx="4" fill="#E6007A" />
+  <rect x="88" y="114" width="34" height="16" rx="4" fill="#FFCC00" />
+  <rect x="128" y="114" width="34" height="16" rx="4" fill="#00FFCC" />
+  <rect x="168" y="114" width="40" height="16" rx="4" fill="#7744FF" />
+
+  <!-- Row 4 -->
+  <rect x="48" y="136" width="34" height="16" rx="4" fill="#CC0099" />
+  <rect x="88" y="136" width="34" height="16" rx="4" fill="#D4FF00" />
+  <rect x="128" y="136" width="34" height="16" rx="4" fill="#00E5FF" />
+  <rect x="168" y="136" width="40" height="16" rx="4" fill="#9D00FF" />
+
+  <!-- Row 5 -->
+  <rect x="48" y="158" width="40" height="16" rx="4" fill="#9900CC" />
+  <rect x="94" y="158" width="30" height="16" rx="4" fill="#00FF88" />
+  <rect x="130" y="158" width="32" height="16" rx="4" fill="#00BFFF" />
+  <rect x="168" y="158" width="40" height="16" rx="4" fill="#B300FF" />
+
+  <!-- Row 6: Space Bar & Modifiers -->
+  <rect x="48" y="178" width="22" height="14" rx="3" fill="#7700AA" />
+  <rect x="74" y="178" width="88" height="14" rx="3" fill="url(#rgbFlow)" />
+  <rect x="166" y="178" width="18" height="14" rx="3" fill="#00E5FF" />
+  <rect x="188" y="178" width="20" height="14" rx="3" fill="#C400FF" />
+
+  <!-- Central RGB Spark Indicator -->
+  <polygon points="128,26 133,39 146,44 133,49 128,62 123,49 110,44 123,39" fill="#00FFFF" filter="url(#glow)" />
+</svg>

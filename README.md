@@ -133,7 +133,29 @@ flowchart TD
 
 ## 🚀 Installation
 
-### Option 1: Automated Installer (Recommended)
+### Option 1: Pre-Built Distribution Packages (For Non-Technical Users)
+
+Download the ready-to-install package for your Linux distribution from [Releases](https://github.com/anas-kummali/msi-mysticlight-controller-linux/releases):
+
+#### Fedora / RHEL / openSUSE (`.rpm`)
+```bash
+sudo dnf install ./target/packages/msi-mysticlight-1.1.0-1.fc45.x86_64.rpm
+# Or install via rpm:
+sudo rpm -ivh msi-mysticlight-1.1.0-1.x86_64.rpm
+```
+
+#### Ubuntu / Debian / Pop!_OS / Linux Mint (`.deb`)
+```bash
+sudo apt install ./target/packages/msi-mysticlight_1.1.0_amd64.deb
+# Or install via dpkg:
+sudo dpkg -i msi-mysticlight_1.1.0_amd64.deb
+```
+
+*The packages automatically configure the desktop menu entry, application icon, udev permissions, and systemd resume services.*
+
+---
+
+### Option 2: Automated Source Installer
 
 Clone the repository and run the automated installer:
 
@@ -144,26 +166,45 @@ cd msi-mysticlight-controller-linux
 ```
 
 **What the installer does automatically:**
-1. Compiles the optimized release binary via `cargo build --release` (564 KB).
-2. Installs `msi-mysticlight` to `~/.local/bin/` with aliases `msi-keyboard` and `msi-rgb`.
-3. Installs `/etc/udev/rules.d/99-msi-mysticlight.rules` for non-root hardware access (`0660` + `uaccess`).
-4. Configures systemd user units for auto-start on boot and restore after system suspend.
-5. Verifies hardware connectivity and lights up all 6 rows to bright solid white.
+1. Compiles optimized release binaries (`msi-mysticlight` CLI & `msi-mysticlight-gui` GUI).
+2. Installs binaries to `~/.local/bin/` with aliases `msi-keyboard` and `msi-rgb`.
+3. Registers the `.desktop` launcher and vector icon in your desktop application menu.
+4. Installs `/etc/udev/rules.d/99-msi-mysticlight.rules` for non-root hardware access (`0660` + `uaccess`).
+5. Configures systemd user units for auto-start on boot and restore after system suspend.
+6. Verifies hardware connectivity and lights up all 6 rows to bright solid white.
 
-### Option 2: Manual Cargo Build
+---
 
-Because this driver requires **no external crates**, it compiles offline in less than one second:
+### Option 3: Building Distribution Packages from Source
+
+You can build the official `.deb`, `.rpm`, and `.tar.gz` packages directly:
 
 ```bash
-cargo build --release
-cp target/release/msi-mysticlight ~/.local/bin/
-ln -sf ~/.local/bin/msi-mysticlight ~/.local/bin/msi-keyboard
-ln -sf ~/.local/bin/msi-mysticlight ~/.local/bin/msi-rgb
-
-# Configure non-root udev permissions:
-sudo cp packaging/99-msi-mysticlight.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger
+./packaging/build_packages.sh
 ```
+Generated packages are written to `target/packages/`.
+
+---
+
+## 🖥️ Native Graphical User Interface (GUI)
+
+The suite includes a native Rust GUI app (`msi-mysticlight-gui` / `msi-mysticlight --gui`) integrating OpenRGB and LightShow capabilities:
+
+* **Interactive 24-Zone Keyboard Matrix:** Real-time visual representation of all 6 physical rows $\times$ 4 zones with per-zone color preview and selection.
+* **Studio Themes & Presets:** Tokyo Night, Cyberpunk Neon, Synthwave Sunset, Matrix Code, Arctic Frost, Nord Aurora, Tactical Crimson, and Sovereign White.
+* **Hardware Animation Engine:** Rainbow Wave, Chromatic Spectrum Cycle, and Breathing effects with interactive speed sliders.
+* **RGB Color Wheel & Hex Input:** Interactive color picker and brightness slider [0..10].
+* **Diagnostics & Troubleshooting:** Real-time hidraw device node, permissions, and topology inspector.
+
+```bash
+# Launch GUI directly
+msi-mysticlight-gui
+
+# Or via CLI flag
+msi-mysticlight --gui
+```
+
+*(You can also launch it anytime by searching "MSI Mystic Light" in your desktop app launcher!)*
 
 ---
 

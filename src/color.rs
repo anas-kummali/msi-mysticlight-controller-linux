@@ -159,3 +159,4 @@ mod tests {
         assert_eq!(format!("{}", c), "#6496C8");
     }
 }
+
