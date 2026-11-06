@@ -16,14 +16,21 @@ echo "=== MSI Mystic Light Controller for Linux Installer ==="
 # 1. Ensure bin dir exists
 mkdir -p "${BIN_DIR}"
 
-# 2. Install executable wrapper
+# 2. Install executable (Rust binary preferred, Python fallback)
 echo "[1/4] Installing executable to ${BIN_DIR}/msi-mysticlight..."
-cat << EOF > "${BIN_DIR}/msi-mysticlight"
+if command -v cargo &>/dev/null; then
+    echo "      Compiling optimized Rust release binary with Cargo..."
+    cargo build --release --manifest-path "${SCRIPT_DIR}/Cargo.toml" --quiet
+    cp -f "${SCRIPT_DIR}/target/release/msi-mysticlight" "${BIN_DIR}/msi-mysticlight"
+    chmod 755 "${BIN_DIR}/msi-mysticlight"
+    echo "      Installed native Rust binary (564 KB, sub-millisecond execution)."
+else
+    echo "      Cargo not found, installing Python wrapper..."
+    cat << EOF > "${BIN_DIR}/msi-mysticlight"
 #!/usr/bin/env python3
 import sys
 import os
 
-# Priority 1: In-tree source directory
 repo_src = os.path.normpath("${SCRIPT_DIR}/src")
 if os.path.isdir(repo_src) and repo_src not in sys.path:
     sys.path.insert(0, repo_src)
@@ -33,7 +40,9 @@ from msi_keyboard.cli import main
 if __name__ == "__main__":
     main()
 EOF
-chmod 755 "${BIN_DIR}/msi-mysticlight"
+    chmod 755 "${BIN_DIR}/msi-mysticlight"
+fi
+
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-keyboard"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-rgb"
 

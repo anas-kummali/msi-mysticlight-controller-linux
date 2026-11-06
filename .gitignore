@@ -42,3 +42,8 @@ htmlcov/
 *~
 .DS_Store
 
+# Rust / Cargo
+target/
+**/*.rs.bk
+
+

@@ -98,10 +98,11 @@ if [ "${LIVE_HW}" = true ]; then
     echo -e "\n${BLUE}--> [Hardware Passthrough] Querying Keyboard from Ubuntu 26.10 Container...${NC}"
     ${ENGINE} run --rm --privileged \
         -v /sys:/sys:ro \
+        -v /dev:/dev \
         -v "${REPO_ROOT}:/app:ro,z" \
         docker.io/library/ubuntu:rolling \
-        /bin/bash -c "apt-get update -qq && apt-get install -y -qq python3 >/dev/null && PYTHONPATH=/app/src python3 -m msi_keyboard.cli --status" \
-        && echo -e "${GREEN}✓ Live Hardware Communication Verified from Ubuntu 26.10 Container!${NC}"
+        /bin/bash -c "apt-get update -qq && apt-get install -y -qq python3 >/dev/null && PYTHONPATH=/app/src python3 -m msi_keyboard.cli --status && /app/target/release/msi-mysticlight --status" \
+        && echo -e "${GREEN}✓ Live Hardware Communication Verified (Python & Rust) from Ubuntu 26.10 Container!${NC}"
 fi
 
 echo -e "\n${GREEN}================================================================${NC}"
