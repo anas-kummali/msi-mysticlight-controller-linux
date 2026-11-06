@@ -330,7 +330,7 @@ Tested and verified in isolated containers without modifying host state:
 | **Debian Sid (Trixie / Unstable)** | Linux x86_64 | **✓ Passed (18/18)** |
 | **Arch Linux** | Linux x86_64 (Pacman Rolling) | **✓ Passed (18/18)** |
 | **openSUSE Tumbleweed** | Linux x86_64 (Zypper Rolling) | **✓ Passed (18/18)** |
-| **Fedora 41 / 42 Workstation** | Linux x86_64 (Host Environment) | **✓ Passed (Live Hardware)** |
+| **Fedora Linux 45 (COSMIC)** | Linux x86_64 (Host Environment) | **✓ Passed (Live Hardware)** |
 
 Run the container test suite locally using Podman or Docker:
 ```bash
