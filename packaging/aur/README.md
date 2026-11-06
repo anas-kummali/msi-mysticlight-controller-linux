@@ -55,3 +55,4 @@ git add PKGBUILD .SRCINFO
 git commit -m "Update to v1.2.0"
 git push origin master
 ```
+

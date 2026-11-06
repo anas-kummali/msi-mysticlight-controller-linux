@@ -36,3 +36,4 @@ msi-mysticlight-gui
    dput ppa:anas-kummali/msi-mysticlight ../msi-mysticlight_*_source.changes
    ```
 4. Canonical's Launchpad build farm will automatically compile native `.deb` binaries for `noble` (24.04 LTS), `jammy` (22.04 LTS), and `oracular` (24.10) for both `amd64` and `arm64`.
+

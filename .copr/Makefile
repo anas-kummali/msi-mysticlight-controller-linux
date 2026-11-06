@@ -2,3 +2,4 @@
 
 srpm:
 	bash packaging/build_srpm.sh $(outdir)
+

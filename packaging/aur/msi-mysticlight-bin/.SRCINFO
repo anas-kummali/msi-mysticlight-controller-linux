@@ -20,3 +20,4 @@ pkgbase = msi-mysticlight-bin
 	sha256sums = 721dca7447ebeef66c51eb3575d45ef0f34e5f6f1d427814e8c8c8bb978760ce
 
 pkgname = msi-mysticlight-bin
+

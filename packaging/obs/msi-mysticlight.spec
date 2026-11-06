@@ -88,3 +88,4 @@ udevadm trigger 2>/dev/null || :
 %{_datadir}/icons/hicolor/scalable/apps/msi-mysticlight.svg
 
 %changelog
+

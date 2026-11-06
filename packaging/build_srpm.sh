@@ -37,3 +37,4 @@ cp "${RPMTOP}/SRPMS/"*.src.rpm "${OUTDIR}/"
 
 echo "=== Successfully built Source RPM ==="
 ls -lh "${OUTDIR}/"*.src.rpm
+

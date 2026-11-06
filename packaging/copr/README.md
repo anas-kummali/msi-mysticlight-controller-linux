@@ -49,3 +49,4 @@ Upload this file under **New Build** -> **Upload SRPM** in COPR or run:
 ```bash
 copr-cli build anas-kummali/msi-mysticlight target/copr/*.src.rpm
 ```
+

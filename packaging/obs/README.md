@@ -70,3 +70,4 @@ cp /path/to/target/packages/msi-mysticlight-1.2.0.tar.gz .
 osc add *
 osc commit -m "Initial import of msi-mysticlight v1.2.0"
 ```
+

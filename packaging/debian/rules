@@ -17,3 +17,4 @@ override_dh_auto_install:
 	install -Dm644 packaging/systemd/msi-keyboard-resume.service debian/msi-mysticlight/usr/lib/systemd/user/msi-keyboard-resume.service
 	install -Dm644 packaging/msi-mysticlight.desktop debian/msi-mysticlight/usr/share/applications/msi-mysticlight.desktop
 	install -Dm644 packaging/icons/msi-mysticlight.svg debian/msi-mysticlight/usr/share/icons/hicolor/scalable/apps/msi-mysticlight.svg
+

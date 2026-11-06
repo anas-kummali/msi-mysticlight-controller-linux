@@ -11,7 +11,6 @@
 [![Arch AUR](https://img.shields.io/badge/Arch%20Linux-AUR-1793D1.svg?style=for-the-badge&logo=archlinux&logoColor=white)](https://aur.archlinux.org/packages/msi-mysticlight-bin)
 [![openSUSE OBS](https://img.shields.io/badge/openSUSE-OBS%20Repo-73BA25.svg?style=for-the-badge&logo=opensuse&logoColor=white)](https://build.opensuse.org/package/show/home:anas-kummali/msi-mysticlight)
 [![Ubuntu PPA](https://img.shields.io/badge/Ubuntu-Launchpad%20PPA-E95420.svg?style=for-the-badge&logo=ubuntu&logoColor=white)](https://launchpad.net/~anas-kummali/+archive/ubuntu/msi-mysticlight)
-[![GHCR Container](https://img.shields.io/badge/GHCR.io-Container%20Image-2088FF.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/anas-kummali/msi-mysticlight-controller-linux/pkgs/container/msi-mysticlight)
 [![CI Build](https://img.shields.io/badge/CI-Passing%20(Multi--Distro)-brightgreen.svg?style=for-the-badge&logo=github-actions&logoColor=white)](.github/workflows/ci.yml)
 
 <p align="center">
@@ -186,19 +185,6 @@ sudo apt-get install -y msi-mysticlight
 # Reload udev rules and launch GUI
 sudo udevadm control --reload-rules && sudo udevadm trigger
 msi-mysticlight-gui
-```
-
-#### 📦 Container Image (GitHub Container Registry - GHCR)
-Run instantly on any host via Podman or Docker with direct USB device access:
-```bash
-# Run CLI status check via Podman:
-podman run --rm --privileged -v /dev/bus/usb:/dev/bus/usb ghcr.io/anas-kummali/msi-mysticlight:latest --status
-
-# Light up keyboard to solid white at full brightness:
-podman run --rm --privileged -v /dev/bus/usb:/dev/bus/usb ghcr.io/anas-kummali/msi-mysticlight:latest -c white -B 10
-
-# Trigger hardware rainbow wave:
-podman run --rm --privileged -v /dev/bus/usb:/dev/bus/usb ghcr.io/anas-kummali/msi-mysticlight:latest -w
 ```
 
 ---
