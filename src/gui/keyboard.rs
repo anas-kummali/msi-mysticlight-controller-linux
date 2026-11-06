@@ -1,6 +1,7 @@
 //! Interactive 24-Zone Physical Keyboard Canvas Renderer.
 
-use eframe::egui::{self, Color32, Pos2, Rect, Rounding, Sense, Stroke, Vec2};
+use std::collections::BTreeSet;
+use eframe::egui::{self, Color32, Pos2, Rect, RichText, Rounding, Sense, Stroke, Vec2};
 use crate::color::Rgb;
 use crate::gui::style::{ACCENT_CYAN, BORDER_SUBTLE, CARD_BG, PANEL_BG, TEXT_MUTED};
 
@@ -9,63 +10,63 @@ pub struct MatrixKey {
     pub label: &'static str,
     pub sub_label: &'static str,
     pub zone: usize,
-    pub width_weight: f32, // Proportional width
+    pub width_weight: f32, // Proportional width for natural laptop layout
 }
 
-/// Physical keyboard layout definition.
+/// Physical keyboard layout definition with authentic laptop stagger proportions.
 pub const KEYBOARD_ROWS: [&[MatrixKey]; 6] = [
-    // Row 1: Function Keys
+    // Row 1: Function Keys (ESC to DEL)
     &[
         MatrixKey { label: "ESC · F1-F4", sub_label: "Z00", zone: 0, width_weight: 1.0 },
         MatrixKey { label: "F5 - F8", sub_label: "Z01", zone: 1, width_weight: 1.0 },
         MatrixKey { label: "F9 - F12", sub_label: "Z02", zone: 2, width_weight: 1.0 },
         MatrixKey { label: "PRTSCR · DEL", sub_label: "Z03", zone: 3, width_weight: 1.0 },
     ],
-    // Row 2: Number Row
+    // Row 2: Number Row (` to BACKSPACE)
     &[
-        MatrixKey { label: "~ · 1 - 4", sub_label: "Z04", zone: 4, width_weight: 1.0 },
+        MatrixKey { label: "` · 1 - 4", sub_label: "Z04", zone: 4, width_weight: 1.0 },
         MatrixKey { label: "5 - 8", sub_label: "Z05", zone: 5, width_weight: 1.0 },
         MatrixKey { label: "9 - 0 · - =", sub_label: "Z06", zone: 6, width_weight: 1.0 },
         MatrixKey { label: "BACKSPACE", sub_label: "Z07", zone: 7, width_weight: 1.0 },
     ],
-    // Row 3: Tab & Upper Letters
+    // Row 3: Tab & Upper Letters (TAB to \)
     &[
-        MatrixKey { label: "TAB · Q - R", sub_label: "Z08", zone: 8, width_weight: 1.0 },
-        MatrixKey { label: "T - U · I", sub_label: "Z09", zone: 9, width_weight: 1.0 },
-        MatrixKey { label: "O - P · [ ]", sub_label: "Z10", zone: 10, width_weight: 1.0 },
-        MatrixKey { label: "\\ | · NUM 7-9", sub_label: "Z11", zone: 11, width_weight: 1.0 },
+        MatrixKey { label: "TAB · Q - R", sub_label: "Z08", zone: 8, width_weight: 1.08 },
+        MatrixKey { label: "T - U · I", sub_label: "Z09", zone: 9, width_weight: 0.92 },
+        MatrixKey { label: "O - P · [ ]", sub_label: "Z10", zone: 10, width_weight: 0.92 },
+        MatrixKey { label: "\\ | · NUM 7-9", sub_label: "Z11", zone: 11, width_weight: 1.08 },
     ],
-    // Row 4: Caps & Home Row
+    // Row 4: Caps & Home Row (CAPS to ENTER)
     &[
-        MatrixKey { label: "CAPS · A - F", sub_label: "Z12", zone: 12, width_weight: 1.0 },
-        MatrixKey { label: "G - J · K", sub_label: "Z13", zone: 13, width_weight: 1.0 },
-        MatrixKey { label: "L · ; '", sub_label: "Z14", zone: 14, width_weight: 1.0 },
-        MatrixKey { label: "ENTER · NUM 4-6", sub_label: "Z15", zone: 15, width_weight: 1.0 },
+        MatrixKey { label: "CAPS · A - F", sub_label: "Z12", zone: 12, width_weight: 1.14 },
+        MatrixKey { label: "G - J · K", sub_label: "Z13", zone: 13, width_weight: 0.86 },
+        MatrixKey { label: "L · ; '", sub_label: "Z14", zone: 14, width_weight: 0.86 },
+        MatrixKey { label: "ENTER · NUM 4-6", sub_label: "Z15", zone: 15, width_weight: 1.14 },
     ],
-    // Row 5: Shifts & Lower Row
+    // Row 5: Shifts & Lower Row (SHIFT to SHIFT)
     &[
-        MatrixKey { label: "LSHIFT · Z - V", sub_label: "Z16", zone: 16, width_weight: 1.0 },
-        MatrixKey { label: "B - M", sub_label: "Z17", zone: 17, width_weight: 1.0 },
-        MatrixKey { label: ", . / · RSHIFT", sub_label: "Z18", zone: 18, width_weight: 1.0 },
-        MatrixKey { label: "UP · NUM 1-3", sub_label: "Z19", zone: 19, width_weight: 1.0 },
+        MatrixKey { label: "LSHIFT · Z - V", sub_label: "Z16", zone: 16, width_weight: 1.20 },
+        MatrixKey { label: "B - M", sub_label: "Z17", zone: 17, width_weight: 0.80 },
+        MatrixKey { label: ", . / · RSHIFT", sub_label: "Z18", zone: 18, width_weight: 0.90 },
+        MatrixKey { label: "UP · NUM 1-3", sub_label: "Z19", zone: 19, width_weight: 1.10 },
     ],
-    // Row 6: Spacebar & Modifiers
+    // Row 6: Spacebar & Modifiers (CTRL to Nav)
     &[
-        MatrixKey { label: "CTRL · FN · WIN · ALT", sub_label: "Z20", zone: 20, width_weight: 1.0 },
-        MatrixKey { label: "SPACEBAR", sub_label: "Z21", zone: 21, width_weight: 1.0 },
-        MatrixKey { label: "ALT · MENU · CTRL", sub_label: "Z22", zone: 22, width_weight: 1.0 },
-        MatrixKey { label: "ARROWS · NUM 0 · ENT", sub_label: "Z23", zone: 23, width_weight: 1.0 },
+        MatrixKey { label: "CTRL · FN · ALT", sub_label: "Z20", zone: 20, width_weight: 1.05 },
+        MatrixKey { label: "SPACEBAR", sub_label: "Z21", zone: 21, width_weight: 1.30 },
+        MatrixKey { label: "ALT · MENU · CTRL", sub_label: "Z22", zone: 22, width_weight: 0.80 },
+        MatrixKey { label: "ARROWS · NUM 0", sub_label: "Z23", zone: 23, width_weight: 0.85 },
     ],
 ];
 
 /// Render the interactive physical keyboard graphic on screen.
+/// Returns `Some((clicked_zone, is_multi_select))` if a key was clicked.
 pub fn render_keyboard_canvas(
     ui: &mut egui::Ui,
     zone_colors: &[Rgb; 24],
-    selected_zone: Option<usize>,
-    selected_row: Option<u8>,
-) -> Option<usize> {
-    let mut newly_selected = None;
+    selected_zones: &BTreeSet<usize>,
+) -> Option<(usize, bool)> {
+    let mut click_event = None;
     let available_width = ui.available_width().max(600.0);
     let key_height = 36.0;
     let spacing = 5.0;
@@ -103,24 +104,39 @@ pub fn render_keyboard_canvas(
             let key_rect = Rect::from_min_size(Pos2::new(current_x, y), Vec2::new(key_w, key_height));
 
             let rgb = zone_colors[key.zone];
-            let is_selected = selected_zone == Some(key.zone)
-                || selected_row == Some(r_idx as u8 + 1);
+            let is_selected = selected_zones.contains(&key.zone);
 
             let key_response = ui.allocate_rect(key_rect, Sense::click());
             let is_hovered = key_response.hovered();
 
+            // Rich interactive tooltip on hover
+            key_response.clone().on_hover_ui(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(key.label).strong().color(Color32::WHITE));
+                    ui.colored_label(ACCENT_CYAN, format!("Zone Z{:02}", key.zone));
+                });
+                ui.label(RichText::new(format!("Physical Row {}", r_idx + 1)).size(11.0).color(TEXT_MUTED));
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new("Color:").size(11.0));
+                    ui.colored_label(Color32::from_rgb(rgb.r, rgb.g, rgb.b), format!("{}", rgb));
+                });
+            });
+
             if key_response.clicked() {
-                newly_selected = Some(key.zone);
+                let is_multi = ui.input(|i| i.modifiers.shift || i.modifiers.command || i.modifiers.ctrl);
+                click_event = Some((key.zone, is_multi));
             }
 
             // 1. LED Underglow Halo (Soft chromatic ambient light around keycap)
-            let glow_rect = key_rect.expand(2.0);
-            let glow_alpha = if is_selected { 140 } else if is_hovered { 110 } else { 75 };
+            let glow_rect = key_rect.expand(if is_selected { 3.0 } else { 2.0 });
+            let glow_alpha = if is_selected { 160 } else if is_hovered { 120 } else { 80 };
             let glow_color = Color32::from_rgba_premultiplied(rgb.r, rgb.g, rgb.b, glow_alpha);
             painter.rect_filled(glow_rect, Rounding::same(8.0), glow_color);
 
             // 2. Keycap Body (Sleek dark finish)
-            let keycap_color = if is_hovered {
+            let keycap_color = if is_selected {
+                Color32::from_rgb(40, 52, 85)
+            } else if is_hovered {
                 Color32::from_rgb(45, 50, 75)
             } else {
                 CARD_BG
@@ -173,5 +189,5 @@ pub fn render_keyboard_canvas(
         }
     }
 
-    newly_selected
+    click_event
 }

@@ -1,12 +1,14 @@
 //! Main GUI application coordinator and lifecycle engine.
 
-use std::time::Duration;
+use std::collections::BTreeSet;
+use std::time::{Duration, Instant};
 use eframe::egui::{self, Color32, RichText, Stroke};
 
 use crate::color::Rgb;
 use crate::constants::{MODE_BREATHING, MODE_CYCLE, MODE_WAVE};
 use crate::controller::MSIKeyboardController;
 use crate::device::DeviceInfo;
+use crate::gradient::{generate_gradient, GradientDirection};
 use crate::gui::keyboard::render_keyboard_canvas;
 use crate::gui::style::{
     configure_visuals, ACCENT_CYAN, ACCENT_GREEN, ACCENT_RED, BORDER_ACTIVE,
@@ -14,15 +16,19 @@ use crate::gui::style::{
 };
 use crate::gui::views::controls::render_controls_view;
 use crate::gui::views::effects::{render_effects_view, ActiveEffect};
+use crate::gui::views::gradient::render_gradient_view;
 use crate::gui::views::status::render_status_view;
-use crate::gui::views::themes::render_themes_view;
-use crate::matrix::{ROW_ZONES, TOTAL_ZONES};
+use crate::gui::views::themes::{render_themes_view, ProfileState};
+use crate::matrix::TOTAL_ZONES;
+use crate::power::{query_power_info, PowerInfo};
+use crate::profile::{load_custom_profiles, save_custom_profiles, CustomProfile};
 use crate::theme::{get_builtin_themes, Theme};
 use crate::VERSION;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NavigationTab {
     Studio,
+    Gradient,
     Effects,
     Themes,
     Diagnostics,
@@ -31,9 +37,10 @@ pub enum NavigationTab {
 pub struct MysticLightApp {
     ctrl: MSIKeyboardController,
     device_info: DeviceInfo,
+    power_info: PowerInfo,
+    last_power_poll: Instant,
     active_tab: NavigationTab,
-    selected_zone: Option<usize>,
-    selected_row: Option<u8>,
+    selected_zones: BTreeSet<usize>,
     zone_colors: [Rgb; TOTAL_ZONES],
     color_rgb: [f32; 3],
     hex_input: String,
@@ -44,6 +51,11 @@ pub struct MysticLightApp {
     breathe_speed: u16,
     themes: Vec<Theme>,
     selected_theme: Option<&'static str>,
+    custom_profiles: Vec<CustomProfile>,
+    new_profile_name: String,
+    gradient_start: [f32; 3],
+    gradient_end: [f32; 3],
+    gradient_direction: GradientDirection,
     status_toast: String,
 }
 
@@ -54,12 +66,15 @@ impl MysticLightApp {
         let mut ctrl = MSIKeyboardController::new();
         let _ = ctrl.open();
         let info = ctrl.get_device_info();
+        let power = query_power_info();
 
         let initial_rgb = Rgb::new(255, 255, 255);
         let zone_colors = [initial_rgb; TOTAL_ZONES];
         let themes = get_builtin_themes();
+        let custom_profiles = load_custom_profiles();
 
         let active_tab = match std::env::var("MYSTICLIGHT_TAB").as_deref() {
+            Ok("gradient") => NavigationTab::Gradient,
             Ok("effects") => NavigationTab::Effects,
             Ok("themes") => NavigationTab::Themes,
             Ok("diagnostics") => NavigationTab::Diagnostics,
@@ -69,9 +84,10 @@ impl MysticLightApp {
         Self {
             ctrl,
             device_info: info,
+            power_info: power,
+            last_power_poll: Instant::now(),
             active_tab,
-            selected_zone: None,
-            selected_row: None,
+            selected_zones: BTreeSet::new(),
             zone_colors,
             color_rgb: [1.0, 1.0, 1.0],
             hex_input: "#FFFFFF".to_string(),
@@ -82,6 +98,11 @@ impl MysticLightApp {
             breathe_speed: 120,
             themes,
             selected_theme: Some("sovereign-white"),
+            custom_profiles,
+            new_profile_name: String::new(),
+            gradient_start: [0.0, 0.94, 1.0], // Cyan
+            gradient_end: [1.0, 0.0, 0.8],   // Magenta
+            gradient_direction: GradientDirection::Horizontal,
             status_toast: "Driver online · Hardware communication ready.".to_string(),
         }
     }
@@ -98,27 +119,7 @@ impl MysticLightApp {
         let rgb = self.current_rgb();
         let b = self.brightness;
 
-        if let Some(z) = self.selected_zone {
-            if let Err(e) = self.ctrl.set_color(rgb.r, rgb.g, rgb.b, b, None, Some(z as u8)) {
-                self.status_toast = format!("Error setting zone {}: {}", z, e);
-            } else {
-                self.zone_colors[z] = rgb;
-                self.status_toast = format!("Applied {} to Zone Z{:02}.", rgb, z);
-                self.active_effect = ActiveEffect::None;
-            }
-        } else if let Some(r) = self.selected_row {
-            if let Err(e) = self.ctrl.set_color(rgb.r, rgb.g, rgb.b, b, Some(r), None) {
-                self.status_toast = format!("Error setting row {}: {}", r, e);
-            } else {
-                if let Some(row_entry) = ROW_ZONES.iter().find(|(r_num, _)| *r_num == r) {
-                    for &z in &row_entry.1 {
-                        self.zone_colors[z as usize] = rgb;
-                    }
-                }
-                self.status_toast = format!("Applied {} across Physical Row {}.", rgb, r);
-                self.active_effect = ActiveEffect::None;
-            }
-        } else {
+        if self.selected_zones.is_empty() {
             if let Err(e) = self.ctrl.set_color(rgb.r, rgb.g, rgb.b, b, None, None) {
                 self.status_toast = format!("Error setting color: {}", e);
             } else {
@@ -126,6 +127,80 @@ impl MysticLightApp {
                 self.status_toast = format!("Applied {} across all 24 zones.", rgb);
                 self.active_effect = ActiveEffect::None;
             }
+        } else {
+            let mut errors = 0;
+            for &z in &self.selected_zones {
+                if self.ctrl.set_color(rgb.r, rgb.g, rgb.b, b, None, Some(z as u8)).is_err() {
+                    errors += 1;
+                } else {
+                    self.zone_colors[z] = rgb;
+                }
+            }
+            if errors > 0 {
+                self.status_toast = format!("Error setting {} of {} zones.", errors, self.selected_zones.len());
+            } else {
+                self.status_toast = format!("Applied {} to {} selected zones.", rgb, self.selected_zones.len());
+                self.active_effect = ActiveEffect::None;
+            }
+        }
+    }
+
+    fn apply_gradient_matrix(&mut self) {
+        let s_rgb = Rgb::new(
+            (self.gradient_start[0] * 255.0).round() as u8,
+            (self.gradient_start[1] * 255.0).round() as u8,
+            (self.gradient_start[2] * 255.0).round() as u8,
+        );
+        let e_rgb = Rgb::new(
+            (self.gradient_end[0] * 255.0).round() as u8,
+            (self.gradient_end[1] * 255.0).round() as u8,
+            (self.gradient_end[2] * 255.0).round() as u8,
+        );
+
+        let grad_zones = generate_gradient(s_rgb, e_rgb, self.gradient_direction);
+        let b = self.brightness;
+
+        for (z, &c) in grad_zones.iter().enumerate() {
+            let _ = self.ctrl.set_color(c.r, c.g, c.b, b, None, Some(z as u8));
+        }
+
+        self.zone_colors = grad_zones;
+        self.active_effect = ActiveEffect::None;
+        self.status_toast = format!("Applied {} gradient across all 24 zones.", self.gradient_direction.label());
+    }
+
+    fn save_current_as_profile(&mut self) {
+        let name = self.new_profile_name.trim();
+        if name.is_empty() {
+            return;
+        }
+        let profile = CustomProfile::new(name, "User custom profile", self.zone_colors);
+        self.custom_profiles.push(profile);
+        if let Err(e) = save_custom_profiles(&self.custom_profiles) {
+            self.status_toast = format!("Failed saving profile: {}", e);
+        } else {
+            self.status_toast = format!("Saved profile '{}' to ~/.config/msi-mysticlight/.", name);
+            self.new_profile_name.clear();
+        }
+    }
+
+    fn apply_custom_profile(&mut self, idx: usize) {
+        if let Some(p) = self.custom_profiles.get(idx).cloned() {
+            let b = self.brightness;
+            for (z, &c) in p.zones.iter().enumerate() {
+                let _ = self.ctrl.set_color(c.r, c.g, c.b, b, None, Some(z as u8));
+            }
+            self.zone_colors = p.zones;
+            self.active_effect = ActiveEffect::None;
+            self.status_toast = format!("Applied custom profile '{}'.", p.name);
+        }
+    }
+
+    fn delete_custom_profile(&mut self, idx: usize) {
+        if idx < self.custom_profiles.len() {
+            let removed = self.custom_profiles.remove(idx);
+            let _ = save_custom_profiles(&self.custom_profiles);
+            self.status_toast = format!("Deleted profile '{}'.", removed.name);
         }
     }
 
@@ -238,6 +313,12 @@ impl eframe::App for MysticLightApp {
             ctx.request_repaint_after(Duration::from_millis(16));
         }
 
+        // Periodic battery telemetry poll (every 5 seconds)
+        if self.last_power_poll.elapsed() > Duration::from_secs(5) {
+            self.power_info = query_power_info();
+            self.last_power_poll = Instant::now();
+        }
+
         // 1. Top Panel (Header & Navigation Tabs)
         egui::TopBottomPanel::top("top_header")
             .frame(egui::Frame::none().fill(PANEL_BG).inner_margin(12.0))
@@ -254,6 +335,14 @@ impl eframe::App for MysticLightApp {
                         } else {
                             ui.colored_label(ACCENT_RED, "● Disconnected");
                         }
+
+                        if self.power_info.is_laptop {
+                            if self.power_info.ac_online {
+                                ui.colored_label(ACCENT_GREEN, "🔌 AC Online");
+                            } else if let Some(pct) = self.power_info.battery_percent {
+                                ui.colored_label(ACCENT_CYAN, format!("🔋 {}%", pct));
+                            }
+                        }
                     });
                 });
 
@@ -263,16 +352,17 @@ impl eframe::App for MysticLightApp {
                 ui.horizontal(|ui| {
                     let tabs = [
                         (NavigationTab::Studio, "🎨 Studio Controls"),
+                        (NavigationTab::Gradient, "🌈 Gradient Studio"),
                         (NavigationTab::Effects, "🌊 Effects Gallery"),
-                        (NavigationTab::Themes, "✨ Theme Studio"),
-                        (NavigationTab::Diagnostics, "⚙ Diagnostics"),
+                        (NavigationTab::Themes, "✨ Themes & Profiles"),
+                        (NavigationTab::Diagnostics, "⚙ Diagnostics & Power"),
                     ];
 
                     for (tab, label) in tabs {
                         let is_active = self.active_tab == tab;
                         let btn = egui::Button::new(
                             RichText::new(label)
-                                .size(12.5)
+                                .size(12.0)
                                 .strong()
                                 .color(if is_active { ACCENT_CYAN } else { TEXT_PRIMARY }),
                         )
@@ -314,8 +404,7 @@ impl eframe::App for MysticLightApp {
                         if ui.button(RichText::new("⚪ Solid White").color(Color32::WHITE)).clicked() {
                             self.color_rgb = [1.0, 1.0, 1.0];
                             self.hex_input = "#FFFFFF".to_string();
-                            self.selected_zone = None;
-                            self.selected_row = None;
+                            self.selected_zones.clear();
                             self.apply_selected_color();
                         }
                     });
@@ -333,16 +422,25 @@ impl eframe::App for MysticLightApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 // Interactive Keyboard Matrix Canvas
-                let clicked_zone = render_keyboard_canvas(
+                let clicked = render_keyboard_canvas(
                     ui,
                     &self.zone_colors,
-                    self.selected_zone,
-                    self.selected_row,
+                    &self.selected_zones,
                 );
 
-                if let Some(z) = clicked_zone {
-                    self.selected_zone = Some(z);
-                    self.selected_row = None;
+                if let Some((z, is_multi)) = clicked {
+                    if is_multi {
+                        if self.selected_zones.contains(&z) {
+                            self.selected_zones.remove(&z);
+                        } else {
+                            self.selected_zones.insert(z);
+                        }
+                    } else if self.selected_zones.len() == 1 && self.selected_zones.contains(&z) {
+                        self.selected_zones.clear();
+                    } else {
+                        self.selected_zones.clear();
+                        self.selected_zones.insert(z);
+                    }
                     let c = self.zone_colors[z];
                     self.color_rgb = [c.r as f32 / 255.0, c.g as f32 / 255.0, c.b as f32 / 255.0];
                     self.hex_input = format!("{}", c);
@@ -350,23 +448,30 @@ impl eframe::App for MysticLightApp {
 
                 ui.add_space(6.0);
 
-                // Quick Cluster Filters
+                // Quick Row Clusters (Row 1 to 6)
                 ui.horizontal(|ui| {
-                    ui.label(RichText::new("Quick Target:").size(11.5).strong().color(TEXT_MUTED));
+                    ui.label(RichText::new("Physical Rows:").size(11.5).strong().color(TEXT_MUTED));
 
+                    let all_active = self.selected_zones.is_empty();
                     let all_btn = egui::Button::new(RichText::new("Full Board (24 Zones)").size(11.0))
-                        .fill(if self.selected_zone.is_none() && self.selected_row.is_none() { CARD_SELECTED } else { CARD_BG });
+                        .fill(if all_active { CARD_SELECTED } else { CARD_BG })
+                        .stroke(if all_active { Stroke::new(1.0_f32, BORDER_ACTIVE) } else { Stroke::new(1.0_f32, BORDER_SUBTLE) });
                     if ui.add(all_btn).clicked() {
-                        self.selected_zone = None;
-                        self.selected_row = None;
+                        self.selected_zones.clear();
                     }
 
                     for r in 1..=6 {
+                        let row_zones = [(r - 1) * 4, (r - 1) * 4 + 1, (r - 1) * 4 + 2, (r - 1) * 4 + 3];
+                        let is_row_selected = row_zones.iter().all(|z| self.selected_zones.contains(z))
+                            && self.selected_zones.len() == 4;
+
                         let row_btn = egui::Button::new(RichText::new(format!("Row {}", r)).size(11.0))
-                            .fill(if self.selected_row == Some(r) { CARD_SELECTED } else { CARD_BG });
+                            .fill(if is_row_selected { CARD_SELECTED } else { CARD_BG })
+                            .stroke(if is_row_selected { Stroke::new(1.0_f32, BORDER_ACTIVE) } else { Stroke::new(1.0_f32, BORDER_SUBTLE) });
+
                         if ui.add(row_btn).clicked() {
-                            self.selected_row = Some(r);
-                            self.selected_zone = None;
+                            self.selected_zones.clear();
+                            self.selected_zones.extend(row_zones.iter().copied());
                         }
                     }
                 });
@@ -383,13 +488,24 @@ impl eframe::App for MysticLightApp {
                             ui,
                             &mut self.color_rgb,
                             &mut self.hex_input,
-                            &mut self.brightness,
-                            self.selected_zone,
-                            self.selected_row,
+                            &mut self.selected_zones,
                             &mut apply_requested,
                         );
                         if apply_requested {
                             self.apply_selected_color();
+                        }
+                    }
+                    NavigationTab::Gradient => {
+                        let mut apply_grad = false;
+                        render_gradient_view(
+                            ui,
+                            &mut self.gradient_start,
+                            &mut self.gradient_end,
+                            &mut self.gradient_direction,
+                            &mut apply_grad,
+                        );
+                        if apply_grad {
+                            self.apply_gradient_matrix();
                         }
                     }
                     NavigationTab::Effects => {
@@ -407,14 +523,28 @@ impl eframe::App for MysticLightApp {
                         }
                     }
                     NavigationTab::Themes => {
-                        let mut chosen_idx = None;
+                        let mut chosen_theme = None;
+                        let mut chosen_custom = None;
+                        let mut delete_custom = None;
+                        let mut save_requested = false;
+
+                        let profile_state = ProfileState {
+                            custom_profiles: &self.custom_profiles,
+                            on_apply: &mut chosen_custom,
+                            on_delete: &mut delete_custom,
+                            new_profile_name: &mut self.new_profile_name,
+                            on_save: &mut save_requested,
+                        };
+
                         render_themes_view(
                             ui,
                             &self.themes,
                             self.selected_theme,
-                            &mut chosen_idx,
+                            &mut chosen_theme,
+                            profile_state,
                         );
-                        if let Some(idx) = chosen_idx {
+
+                        if let Some(idx) = chosen_theme {
                             let t = &self.themes[idx];
                             self.selected_theme = Some(t.id);
                             if let Err(e) = t.apply(&self.ctrl, self.brightness) {
@@ -425,9 +555,21 @@ impl eframe::App for MysticLightApp {
                                 self.status_toast = format!("Theme '{}' applied across all 6 rows.", t.name);
                             }
                         }
+
+                        if let Some(idx) = chosen_custom {
+                            self.apply_custom_profile(idx);
+                        }
+
+                        if let Some(idx) = delete_custom {
+                            self.delete_custom_profile(idx);
+                        }
+
+                        if save_requested {
+                            self.save_current_as_profile();
+                        }
                     }
                     NavigationTab::Diagnostics => {
-                        render_status_view(ui, &self.device_info);
+                        render_status_view(ui, &self.device_info, &self.power_info);
                     }
                 }
             });
@@ -439,7 +581,7 @@ impl eframe::App for MysticLightApp {
 pub fn run_gui() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([940.0, 720.0])
+            .with_inner_size([980.0, 780.0])
             .with_min_inner_size([800.0, 580.0])
             .with_title("MSI Mystic Light Controller"),
         ..Default::default()

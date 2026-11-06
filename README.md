@@ -188,15 +188,17 @@ Generated packages are written to `target/packages/`.
 
 ## 🖥️ Modern Native Graphical User Interface (GUI)
 
-The suite includes a modern native Rust GUI app (`msi-mysticlight-gui` / `msi-mysticlight --gui`) integrating OpenRGB and LightShow capabilities into an ergonomic Libadwaita / Tokyo Night styled control center:
+The suite includes a modern native Rust GUI app (`msi-mysticlight-gui` / `msi-mysticlight --gui`) integrating OpenRGB, SignalRGB, and Polychromatic ergonomics into a unified Libadwaita / Tokyo Night styled control center:
 
-* **Authentic Physical Keyboard Matrix Canvas:** Full visual representation of all 6 physical rows $\times$ 4 zones with physical keycaps (`ESC`, `QWERTY`, `SPACE`, etc.), key labels, zone badges, and glowing LED underglow halos.
+* **Authentic Physical Keyboard Matrix Canvas:** Full visual representation of all 6 physical rows $\times$ 4 zones with physical keycaps (`ESC`, `QWERTY`, `SPACE`, etc.), key labels, zone badges, rich hover tooltips, and glowing LED underglow halos.
+* **Gaming Clusters & Multi-Zone Targeting:** 1-click targeting of essential gaming clusters (`WASD`, `Arrow Keys`, `Numpad`, `QWERTY Alphas`, `F1-F12`, `Number Row`, `Space & Modifiers`, `Invert Selection`) alongside Shift-click multi-zone selection.
+* **Gradient Studio:** Spatial mathematical linear interpolation across all 24 zones with Start/End color pickers, quick preset swatches, direction control (`Horizontal`, `Vertical`, `Diagonal`, `Radial`), and live computed matrix ribbon preview.
+* **Themes & Profiles Library:** Curated built-in palettes with 6-row chromatic ribbons plus a persistent **Custom User Profiles Manager** saving configurations to `~/.config/msi-mysticlight/profiles.json`.
 * **Real-Time On-Screen Animation Mirroring:** Dynamically previews Rainbow Wave, Spectrum Cycle, and Breathing animations on the virtual keyboard at 60 FPS in sync with the hardware microcontroller.
-* **Theme Studio & Profile Management:** Curated cross-row themes with interactive chromatic ribbon previews (Tokyo Night, Cyberpunk Neon, Synthwave Sunset, Matrix Code, Arctic Frost, Nord Aurora, Tactical Crimson, Sovereign White, and Warm Amber).
-* **Hardware Effects Gallery:** One-click activation of Rainbow Wave, Chromatic Spectrum Cycle, Breathing Pulse, and Power Off with customizable step and fade sliders.
-* **Studio Color Controls & Swatches:** Integrated HSV color wheel, precise 8-bit RGB channel sliders, hexadecimal input, and gaming preset swatches with instant single-click application.
+* **Hardware Effects Gallery:** One-click activation of Rainbow Wave, Chromatic Spectrum Cycle, Breathing Pulse, and Power Off with customizable step and fade speed sliders.
+* **Laptop Power & Battery Telemetry:** Real-time AC power connection status and battery capacity monitoring directly from `/sys/class/power_supply` with battery conservation tips.
 * **Persistent Bottom Master Action Deck:** Always-accessible master brightness slider [0..10], quick-action buttons (Solid White, Rainbow Wave, Power Off), and live hardware status toast.
-* **Diagnostics & Diagnostics Inspector:** Real-time kernel hidraw device node, udev permissions, matrix topology inspector, and non-root permission repair guide.
+* **Diagnostics & Udev Inspector:** Real-time kernel hidraw device node, permissions inspector, matrix topology breakdown, and automated udev and resume service commands.
 
 ```bash
 # Launch GUI directly
