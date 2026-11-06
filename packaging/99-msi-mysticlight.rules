@@ -1,19 +1,29 @@
-# MSI MysticLight USB HID permissions for non-root keyboard control
-# Permits desktop user access via uaccess / plugdev
+# MSI Mystic Light Linux - USB HID Udev Security Rules
+# Principle of Least Privilege:
+# TAG+="uaccess" grants read/write permissions exclusively to the active
+# desktop session user (seat0) via systemd-logind POSIX ACLs.
+# MODE="0660" and GROUP="plugdev" prevent world-readable/writable access (no 0666).
 
 # MSI Vector 16 HX AI (MS-1603) 24-Zone
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1603", MODE="0666", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1603", MODE="0660", GROUP="plugdev", TAG+="uaccess"
 
 # MSI Vector A18 HX (MS-1605) 24-Zone
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="1605", MODE="0666", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="1605", MODE="0660", GROUP="plugdev", TAG+="uaccess"
 
 # MSI Crosshair 16 Max HX (MS-1801)
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="1801", MODE="0666", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="1801", MODE="0660", GROUP="plugdev", TAG+="uaccess"
 
 # MSI Katana 15 HX (MS-1565)
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1601", MODE="0666", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1601", MODE="0660", GROUP="plugdev", TAG+="uaccess"
 
-# MSI Generic MysticLight matchers
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", MODE="0666", TAG+="uaccess"
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", MODE="0666", TAG+="uaccess"
+# MSI Delta 15 (MS-1562)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1562", MODE="0660", GROUP="plugdev", TAG+="uaccess"
 
+# MSI Alpha 15/17 (MS-1563)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1563", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# MSI Cyborg 15 (MS-1606)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="1606", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# MSI Stealth / Raider (MS-1564)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1564", MODE="0660", GROUP="plugdev", TAG+="uaccess"

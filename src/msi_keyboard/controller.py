@@ -5,6 +5,7 @@ from __future__ import annotations
 import fcntl
 import glob
 import os
+import stat
 import sys
 import time
 from typing import Sequence
@@ -35,10 +36,21 @@ from msi_keyboard.protocol import (
 
 def find_device() -> str | None:
     """Scan /sys/class/hidraw/ for MSI MysticLight USB hardware nodes."""
-    # Check env override first
+    # Check env override first with strict path and device type validation
     override = os.environ.get("MSI_KEYBOARD_DEVICE")
-    if override and os.path.exists(override):
-        return override
+    if override:
+        resolved = os.path.realpath(override)
+        try:
+            st = os.stat(resolved)
+            # Must be a character device under /dev/ and match hidraw naming
+            if (
+                stat.S_ISCHR(st.st_mode)
+                and resolved.startswith("/dev/")
+                and os.path.basename(resolved).startswith("hidraw")
+            ):
+                return resolved
+        except OSError:
+            pass
 
     candidates: list[tuple[str, str, str]] = []
     for path in sorted(glob.glob("/sys/class/hidraw/hidraw*")):
@@ -67,7 +79,7 @@ def find_device() -> str | None:
                 candidates.append((node, ident, name))
 
     if not candidates:
-        # Fallback to /dev/hidraw3 if present
+        # Fallback to /dev/hidraw3 if present and is a char device
         if os.path.exists("/dev/hidraw3"):
             return "/dev/hidraw3"
         return None
@@ -91,11 +103,14 @@ def parse_color(val: str, brightness: int = 10) -> tuple[int, int, int]:
                 f"Invalid color: '{val}'. Use hex (#RRGGBB) or named color "
                 f"({', '.join(COLORS.keys())})"
             )
-        r = int(h[0:2], 16)
-        g = int(h[2:4], 16)
-        b = int(h[4:6], 16)
+        try:
+            r = int(h[0:2], 16)
+            g = int(h[2:4], 16)
+            b = int(h[4:6], 16)
+        except ValueError as e:
+            raise ValueError(f"Invalid hexadecimal color value: '{val}'") from e
 
-    scale = max(0.0, min(1.0, brightness / 10.0))
+    scale = max(0.0, min(1.0, float(brightness) / 10.0))
     return int(r * scale), int(g * scale), int(b * scale)
 
 
@@ -125,6 +140,9 @@ class MSIKeyboardController:
                 pass
             self._fd = None
 
+    def __del__(self) -> None:
+        self.close()
+
     def __enter__(self) -> MSIKeyboardController:
         self.open()
         return self
@@ -135,7 +153,13 @@ class MSIKeyboardController:
     def send_feature(self, data: Sequence[int] | bytes | bytearray) -> None:
         if self._fd is None:
             raise RuntimeError("Device handle is not open.")
-        fcntl.ioctl(self._fd, HIDIOCSFEATURE_64, bytes(data).ljust(64, b"\x00"))
+        payload = bytes(data).ljust(64, b"\x00")[:64]
+        try:
+            fcntl.ioctl(self._fd, HIDIOCSFEATURE_64, payload)
+        except OSError as e:
+            raise OSError(
+                f"Failed sending USB HID feature report to {self.device_node}: {e}"
+            ) from e
 
     def set_color(
         self,
@@ -147,7 +171,7 @@ class MSIKeyboardController:
         zone: int | None = None,
     ) -> None:
         """Set static color across all 6 rows (all 24 zones), a specific row, or a specific zone."""
-        scale = max(0.0, min(1.0, brightness / 10.0))
+        scale = max(0.0, min(1.0, float(brightness) / 10.0))
         sr, sg, sb = int(r * scale), int(g * scale), int(b * scale)
         b_pct = int(max(0, min(100, brightness * 10)))
 
@@ -156,6 +180,8 @@ class MSIKeyboardController:
         p_a = build_format_a_packet(MODE_STATIC, speed=0, brightness=brightness, r=sr, g=sg, b=sb)
 
         if zone is not None:
+            if not isinstance(zone, int) or zone < 0 or zone >= 24:
+                raise ValueError(f"Invalid zone: {zone}. Must be between 0 and 23.")
             self.send_feature(build_zone_mask_packet(zone))
             self.send_feature(p_b)
             self.send_feature(p_c)

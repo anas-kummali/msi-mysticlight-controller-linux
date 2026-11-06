@@ -6,6 +6,11 @@ BIN_DIR="${HOME}/.local/bin"
 UDEV_DIR="/etc/udev/rules.d"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 
+if [[ -z "${BIN_DIR:-}" || -z "${SCRIPT_DIR:-}" ]]; then
+    echo "Error: Critical installation directories are undefined." >&2
+    exit 1
+fi
+
 echo "=== MSI Mystic Light Controller for Linux Installer ==="
 
 # 1. Ensure bin dir exists
@@ -18,8 +23,8 @@ cat << EOF > "${BIN_DIR}/msi-mysticlight"
 import sys
 import os
 
-# Priority 1: In-tree src directory
-repo_src = "${SCRIPT_DIR}/src"
+# Priority 1: In-tree source directory
+repo_src = os.path.normpath("${SCRIPT_DIR}/src")
 if os.path.isdir(repo_src) and repo_src not in sys.path:
     sys.path.insert(0, repo_src)
 
@@ -28,7 +33,7 @@ from msi_keyboard.cli import main
 if __name__ == "__main__":
     main()
 EOF
-chmod +x "${BIN_DIR}/msi-mysticlight"
+chmod 755 "${BIN_DIR}/msi-mysticlight"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-keyboard"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-rgb"
 
@@ -86,4 +91,3 @@ else
     echo ""
     echo "Notice: Controller installed. If permission was denied, log out and back in for udev rules to apply."
 fi
-

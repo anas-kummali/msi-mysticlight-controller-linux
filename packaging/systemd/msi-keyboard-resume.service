@@ -7,6 +7,12 @@ After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate
 Type=oneshot
 ExecStart=%h/.local/bin/msi-mysticlight -c white -B 10
 
+# Sandboxing & Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectControlGroups=yes
+ProtectKernelTunables=yes
+RestrictAddressFamilies=AF_UNIX
+
 [Install]
 WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
-

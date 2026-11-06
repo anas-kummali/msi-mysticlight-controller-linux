@@ -9,6 +9,15 @@ from msi_keyboard.constants import (
 )
 
 
+def _clamp_byte(val: int | float) -> int:
+    """Clamp any numeric input to a strict unsigned 8-bit integer [0..255]."""
+    try:
+        iv = int(val)
+    except (ValueError, TypeError):
+        return 0
+    return max(0, min(255, iv))
+
+
 def build_all_zones_prep_packet() -> bytearray:
     """Build a global prep packet asserting all 256 bits across all zone banks.
     
@@ -24,8 +33,8 @@ def build_all_zones_prep_packet() -> bytearray:
 
 def build_zone_mask_packet(zone_idx: int) -> bytearray:
     """Build a 32-bit zone mask packet for a single zone (0..23)."""
-    if zone_idx < 0 or zone_idx > 31:
-        raise ValueError(f"zone_idx must be between 0 and 31 (got {zone_idx})")
+    if not isinstance(zone_idx, int) or zone_idx < 0 or zone_idx > 31:
+        raise ValueError(f"zone_idx must be an integer between 0 and 31 (got {zone_idx})")
     mask = 1 << zone_idx
     buf = bytearray(64)
     buf[0] = 0x02
@@ -46,22 +55,22 @@ def build_format_b_static_packet(
 ) -> bytearray:
     """Build an extended Format B static mode packet with unmasked zone flag."""
     p = bytearray(64)
-    p[0] = 0x02                # Report ID 2
-    p[1] = 0x02                # Mode packet ID
-    p[2] = MODE_STATIC         # Static Mode (1)
-    p[3] = speed & 0xFF        # Duration LSB (100 = 1.00s)
-    p[4] = (speed >> 8) & 0xFF # Duration MSB
-    p[7] = zone_mask & 0xFF    # Unmasked zone byte (0xFF enables all zones)
+    p[0] = 0x02                     # Report ID 2
+    p[1] = 0x02                     # Mode packet ID
+    p[2] = MODE_STATIC              # Static Mode (1)
+    p[3] = _clamp_byte(speed)       # Duration LSB (100 = 1.00s)
+    p[4] = _clamp_byte(speed >> 8)  # Duration MSB
+    p[7] = _clamp_byte(zone_mask)   # Unmasked zone byte (0xFF enables all zones)
     p[8] = 0x01
     p[9] = 0x00
-    p[10] = 0                  # Keyframe 0 (0% of cycle)
-    p[11] = r
-    p[12] = g
-    p[13] = b
-    p[14] = 100                # Keyframe 1 (100% of cycle)
-    p[15] = r
-    p[16] = g
-    p[17] = b
+    p[10] = 0                       # Keyframe 0 (0% of cycle)
+    p[11] = _clamp_byte(r)
+    p[12] = _clamp_byte(g)
+    p[13] = _clamp_byte(b)
+    p[14] = 100                     # Keyframe 1 (100% of cycle)
+    p[15] = _clamp_byte(r)
+    p[16] = _clamp_byte(g)
+    p[17] = _clamp_byte(b)
     return p
 
 
@@ -79,21 +88,21 @@ def build_msi_center_color_packet(
     p[0] = 0x02
     p[1] = 0x02
     p[2] = MODE_STATIC
-    p[3] = profile_slot & 0xFF
+    p[3] = _clamp_byte(profile_slot)
     p[4] = 0x02
     p[5] = 0x00
-    p[6] = transition & 0xFF
-    p[7] = effect_code & 0xFF
+    p[6] = _clamp_byte(transition)
+    p[7] = _clamp_byte(effect_code)
     p[8] = 0x01
     p[9] = 0x01
     p[10] = 0x00
-    p[11] = r
-    p[12] = g
-    p[13] = b
-    p[14] = max(0, min(100, brightness_pct))
-    p[15] = r
-    p[16] = g
-    p[17] = b
+    p[11] = _clamp_byte(r)
+    p[12] = _clamp_byte(g)
+    p[13] = _clamp_byte(b)
+    p[14] = _clamp_byte(max(0, min(100, int(brightness_pct))))
+    p[15] = _clamp_byte(r)
+    p[16] = _clamp_byte(g)
+    p[17] = _clamp_byte(b)
     return p
 
 
@@ -109,13 +118,13 @@ def build_format_a_packet(
     p = bytearray(64)
     p[0] = 0x02
     p[1] = 0x00
-    p[2] = mode & 0xFF
-    p[3] = speed & 0xFF
-    p[4] = max(0, min(10, brightness))
+    p[2] = _clamp_byte(mode)
+    p[3] = _clamp_byte(speed)
+    p[4] = max(0, min(10, int(brightness)))
     p[5] = 0x01
-    p[6] = r
-    p[7] = g
-    p[8] = b
+    p[6] = _clamp_byte(r)
+    p[7] = _clamp_byte(g)
+    p[8] = _clamp_byte(b)
     return p
 
 
@@ -142,26 +151,26 @@ def build_effect_packet(
     p = bytearray(64)
     p[0] = 0x02
     p[1] = 0x02
-    p[2] = mode & 0xFF
-    p[3] = speed & 0xFF
-    p[4] = (speed >> 8) & 0xFF
+    p[2] = _clamp_byte(mode)
+    p[3] = _clamp_byte(speed)
+    p[4] = _clamp_byte(speed >> 8)
     p[7] = 0xFF              # Full zone mask across 24 zones
     p[8] = 0x01
-    p[9] = wave_dir & 0xFF
+    p[9] = _clamp_byte(wave_dir)
 
     if colors:
         step = 100 // max(1, len(colors))
         for i, c in enumerate(colors[:9]):
-            p[10 + i * 4] = i * step
-            p[11 + i * 4] = c[0]
-            p[12 + i * 4] = c[1]
-            p[13 + i * 4] = c[2]
+            p[10 + i * 4] = _clamp_byte(i * step)
+            p[11 + i * 4] = _clamp_byte(c[0])
+            p[12 + i * 4] = _clamp_byte(c[1])
+            p[13 + i * 4] = _clamp_byte(c[2])
 
         # Close animation cycle smoothly
         idx = min(9, len(colors))
         p[10 + idx * 4] = 100
-        p[11 + idx * 4] = colors[0][0]
-        p[12 + idx * 4] = colors[0][1]
-        p[13 + idx * 4] = colors[0][2]
+        p[11 + idx * 4] = _clamp_byte(colors[0][0])
+        p[12 + idx * 4] = _clamp_byte(colors[0][1])
+        p[13 + idx * 4] = _clamp_byte(colors[0][2])
 
     return p
