@@ -122,3 +122,4 @@ def test_controller_fd_destructor_cleanup():
     ctrl.close = lambda: setattr(ctrl, "_fd", None)
     ctrl.__del__()
     assert ctrl._fd is None
+

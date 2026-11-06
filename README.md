@@ -187,10 +187,22 @@ systemctl --user enable msi-keyboard-resume.service
 
 ## Testing & Quality
 
-Run the test suite using `pytest`:
+Run the test suite locally using `pytest`:
 
 ```bash
 pytest
+```
+
+### Multi-Distribution Testing (Without Installing)
+
+You can run the full test suite across isolated clean containers of **Ubuntu 24.04**, **Debian 12**, **Arch Linux**, and **Alpine Linux (musl)** using Podman or Docker with zero modifications to your host OS:
+
+```bash
+# Run unit tests across all 4 distributions:
+./scripts/test_distros.sh
+
+# Run multi-distro tests with live USB HID hardware passthrough:
+./scripts/test_distros.sh --live
 ```
 
 ---
