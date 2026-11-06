@@ -1,14 +1,13 @@
-//! High-level hardware controller interface for MSI 24-Zone & 4-Zone Keyboards.
+//! Hardware controller interface for MSI 24-Zone & 4-Zone Keyboards.
 
 use std::fs::OpenOptions;
-use std::os::unix::fs::FileTypeExt;
 use std::os::unix::io::{AsRawFd, RawFd};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use crate::constants::{
-    COLORS, HIDIOCSFEATURE_64, KNOWN_PIDS, MODE_OFF, MODE_STATIC,
-    ROW_ZONES, VENDOR_MSI, VENDOR_REALTEK_MSI, WAVE_LTR,
-};
+pub use crate::color::parse_color;
+pub use crate::device::{find_device, DeviceInfo};
+use crate::constants::{HIDIOCSFEATURE_64, MODE_OFF, MODE_STATIC, WAVE_LTR};
+use crate::matrix::ROW_ZONES;
 use crate::protocol::{
     build_all_zones_prep_packet, build_effect_packet, build_format_a_packet,
     build_format_b_static_packet, build_msi_center_color_packet, build_off_packet,
@@ -17,149 +16,6 @@ use crate::protocol::{
 
 extern "C" {
     fn ioctl(fd: std::os::raw::c_int, request: std::os::raw::c_ulong, ...) -> std::os::raw::c_int;
-}
-
-/// Device status information report.
-#[derive(Debug, Clone)]
-pub struct DeviceInfo {
-    pub node: Option<String>,
-    pub present: bool,
-    pub accessible: bool,
-    pub total_zones: usize,
-    pub total_rows: usize,
-}
-
-/// Scan /sys/class/hidraw/ for MSI MysticLight USB hardware nodes.
-pub fn find_device() -> Option<PathBuf> {
-    // Check env override first with strict path and device type validation
-    if let Ok(override_path) = std::env::var("MSI_KEYBOARD_DEVICE") {
-        let p = Path::new(&override_path);
-        if let Ok(resolved) = std::fs::canonicalize(p) {
-            if let Ok(meta) = std::fs::metadata(&resolved) {
-                let is_chr = meta.file_type().is_char_device();
-                let starts_dev = resolved.starts_with("/dev");
-                let is_hidraw = resolved
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .map(|s| s.starts_with("hidraw"))
-                    .unwrap_or(false);
-                if is_chr && starts_dev && is_hidraw {
-                    return Some(resolved);
-                }
-            }
-        }
-    }
-
-    let mut candidates: Vec<(PathBuf, String, String)> = Vec::new();
-    if let Ok(entries) = std::fs::read_dir("/sys/class/hidraw") {
-        let mut paths: Vec<_> = entries.filter_map(|e| e.ok().map(|e| e.path())).collect();
-        paths.sort();
-
-        for path in paths {
-            let uevent_path = path.join("device").join("uevent");
-            let content = match std::fs::read_to_string(&uevent_path) {
-                Ok(c) => c,
-                Err(_) => continue,
-            };
-
-            let up = content.to_uppercase();
-            let mut ident = String::new();
-            let mut name = String::new();
-
-            for line in content.lines() {
-                if let Some(rest) = line.strip_prefix("HID_ID=") {
-                    let bits: Vec<&str> = rest.split(':').collect();
-                    if bits.len() == 3 {
-                        let v = if bits[1].len() >= 4 {
-                            &bits[1][bits[1].len() - 4..]
-                        } else {
-                            bits[1]
-                        };
-                        let p = if bits[2].len() >= 4 {
-                            &bits[2][bits[2].len() - 4..]
-                        } else {
-                            bits[2]
-                        };
-                        ident = format!("{}:{}", v.to_uppercase(), p.to_uppercase());
-                    }
-                } else if let Some(rest) = line.strip_prefix("HID_NAME=") {
-                    name = rest.trim().to_string();
-                }
-            }
-
-            let has_vendor = up.contains(VENDOR_MSI) || up.contains(VENDOR_REALTEK_MSI);
-            let is_known = KNOWN_PIDS.iter().any(|(p, _)| *p == ident);
-            let is_mystic = up.replace(' ', "").contains("MYSTICLIGHT") || is_known;
-
-            if is_mystic && has_vendor {
-                if let Some(file_name) = path.file_name() {
-                    let node = PathBuf::from("/dev").join(file_name);
-                    if node.exists() {
-                        candidates.push((node, ident, name));
-                    }
-                }
-            }
-        }
-    }
-
-    if candidates.is_empty() {
-        let fallback = PathBuf::from("/dev/hidraw3");
-        if fallback.exists() {
-            if let Ok(meta) = std::fs::metadata(&fallback) {
-                if meta.file_type().is_char_device() {
-                    return Some(fallback);
-                }
-            }
-        }
-        return None;
-    }
-
-    candidates.sort_by(|a, b| {
-        let a_score = (a.1 != "1462:1603", !KNOWN_PIDS.iter().any(|(p, _)| *p == a.1));
-        let b_score = (b.1 != "1462:1603", !KNOWN_PIDS.iter().any(|(p, _)| *p == b.1));
-        a_score.cmp(&b_score)
-    });
-
-    Some(candidates[0].0.clone())
-}
-
-/// Parse color name or hex (#RRGGBB) and scale by brightness level [0..10].
-pub fn parse_color(val: &str, brightness: u8) -> Result<(u8, u8, u8), String> {
-    let trimmed = val.trim().to_lowercase();
-    let (r, g, b) = if let Some(&(_, rgb)) = COLORS.iter().find(|(name, _)| *name == trimmed) {
-        rgb
-    } else {
-        let h = trimmed.trim_start_matches('#');
-        let expanded: String;
-        let hex_str = if h.len() == 3 {
-            expanded = h.chars().flat_map(|c| [c, c]).collect();
-            &expanded
-        } else if h.len() == 6 {
-            h
-        } else {
-            let names: Vec<&str> = COLORS.iter().map(|(n, _)| *n).collect();
-            return Err(format!(
-                "Invalid color: '{}'. Use hex (#RRGGBB) or named color ({})",
-                val,
-                names.join(", ")
-            ));
-        };
-
-        let r = u8::from_str_radix(&hex_str[0..2], 16)
-            .map_err(|_| format!("Invalid hexadecimal color value: '{}'", val))?;
-        let g = u8::from_str_radix(&hex_str[2..4], 16)
-            .map_err(|_| format!("Invalid hexadecimal color value: '{}'", val))?;
-        let b = u8::from_str_radix(&hex_str[4..6], 16)
-            .map_err(|_| format!("Invalid hexadecimal color value: '{}'", val))?;
-        (r, g, b)
-    };
-
-    let scale = (brightness.min(10) as f32 / 10.0).clamp(0.0, 1.0);
-    Ok((
-        (r as f32 * scale) as u8,
-        (g as f32 * scale) as u8,
-        (b as f32 * scale) as u8,
-    ))
 }
 
 /// Manages raw HID communication with the MSI Keyboard backlight controller.
@@ -363,34 +219,7 @@ impl MSIKeyboardController {
 
     /// Query hardware availability and access permissions.
     pub fn get_device_info(&self) -> DeviceInfo {
-        match &self.device_node {
-            Some(node) => {
-                let present = node.exists();
-                let accessible = if present {
-                    OpenOptions::new()
-                        .read(true)
-                        .write(true)
-                        .open(node)
-                        .is_ok()
-                } else {
-                    false
-                };
-                DeviceInfo {
-                    node: Some(node.display().to_string()),
-                    present,
-                    accessible,
-                    total_zones: 24,
-                    total_rows: 6,
-                }
-            }
-            None => DeviceInfo {
-                node: None,
-                present: false,
-                accessible: false,
-                total_zones: 24,
-                total_rows: 6,
-            },
-        }
+        DeviceInfo::query(self.device_node.as_deref())
     }
 }
 

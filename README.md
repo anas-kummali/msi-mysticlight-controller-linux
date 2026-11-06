@@ -269,6 +269,44 @@ systemctl --user enable --now msi-keyboard-resume.service
 
 ---
 
+## 🏗️ Codebase Architecture & Modularization
+
+The codebase follows strict separation of concerns, Single Responsibility Principle (SRP), and zero-cost abstraction patterns:
+
+```text
+src/
+├── lib.rs              # Library root, public API re-exports, documentation
+├── main.rs             # Thin binary entrypoint delegating to cli::run()
+├── constants.rs        # Hardware constants, mode IDs, vendor IDs, known PIDs
+├── error.rs            # Strongly-typed ControllerError hierarchy & ControllerResult
+├── color.rs            # Domain type Rgb, palette constants, hex/named parsing, brightness scaling
+├── matrix.rs           # 24-zone hardware physical layout, row tables, zone bounds
+├── device.rs           # Sysfs device discovery, security path validation, DeviceInfo inspection
+├── protocol.rs         # 64-byte stack-allocated HID report packet builders
+├── controller.rs       # MSIKeyboardController struct, POSIX ioctl FFI, hardware commands
+└── cli/
+    ├── mod.rs          # CLI execution engine & dispatch
+    ├── args.rs         # Zero-dependency argument parser & validation (CliArgs)
+    └── view.rs         # Terminal views (ANSI banners, help text, status report)
+```
+
+| Module | Lines of Code | Responsibility |
+| :--- | :--- | :--- |
+| `src/main.rs` | 5 | Lean application binary entrypoint |
+| `src/lib.rs` | 24 | High-level library exports and prelude |
+| `src/constants.rs` | 39 | USB IDs, ioctl request codes, hardware mode flags |
+| `src/error.rs` | 72 | Strongly-typed `ControllerError` hierarchy (no stringly errors) |
+| `src/matrix.rs` | 90 | 24-zone physical matrix mapping, row-to-zone tables, bounds validation |
+| `src/color.rs` | 161 | `Rgb` domain primitive, hex `#RRGGBB` / `#RGB` parsing, brightness scaling |
+| `src/device.rs` | 186 | `/sys/class/hidraw` device scanner, uevent parser, path canonicalization |
+| `src/protocol.rs` | 284 | Zero-allocation `[u8; 64]` HID feature report packet builders |
+| `src/controller.rs` | 236 | Device lifecycle, POSIX `ioctl` FFI dispatch, 24-zone hardware coordinator |
+| `src/cli/args.rs` | 230 | Custom zero-dependency CLI arguments parser & validation rules |
+| `src/cli/view.rs` | 74 | User-facing terminal layouts (banner, help display, status table) |
+| `src/cli/mod.rs` | 160 | CLI execution orchestration and process exit code mapping |
+
+---
+
 ## 🛡️ Security & Hardening
 
 This driver was audited and hardened under strict security principles:
@@ -294,18 +332,29 @@ The test suite validates packet accuracy, row/zone mappings, color parsing, and 
 cargo test
 ```
 ```text
-running 11 tests
-test tests::test_prep_packet ... ok
-test tests::test_zone_mask_packets ... ok
-test tests::test_format_b_static_packet ... ok
-test tests::test_msi_center_color_packet ... ok
-test tests::test_format_a_packet ... ok
-test tests::test_off_packet ... ok
-test tests::test_effect_packet ... ok
-test tests::test_parse_color_named ... ok
-test tests::test_parse_color_hex ... ok
-test tests::test_row_zones_mapping ... ok
-test tests::test_security_device_override_rejection ... ok
+running 20 tests
+test cli::args::tests::test_parse_color_options ... ok
+test cli::args::tests::test_parse_default ... ok
+test cli::args::tests::test_parse_flags ... ok
+test color::tests::test_parse_color_hex ... ok
+test cli::args::tests::test_parse_unknown_argument ... ok
+test cli::args::tests::test_parse_brightness_options ... ok
+test cli::args::tests::test_parse_row_and_zone ... ok
+test color::tests::test_parse_color_named ... ok
+test color::tests::test_rgb_struct ... ok
+test device::tests::test_device_info_query_none ... ok
+test matrix::tests::test_row_lookups ... ok
+test matrix::tests::test_row_zones_mapping ... ok
+test device::tests::test_security_device_override_rejection ... ok
+test protocol::tests::test_format_a_packet ... ok
+test protocol::tests::test_format_b_static_packet ... ok
+test protocol::tests::test_effect_packet ... ok
+test protocol::tests::test_msi_center_color_packet ... ok
+test protocol::tests::test_off_packet ... ok
+test protocol::tests::test_prep_packet ... ok
+test protocol::tests::test_zone_mask_packets ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 running 7 integration tests
 test test_cli_help ... ok
@@ -316,7 +365,7 @@ test test_cli_invalid_brightness ... ok
 test test_cli_invalid_row ... ok
 test test_cli_invalid_zone ... ok
 
-test result: ok. 18 passed; 0 failed; finished in 0.05s
+test result: ok. 27 passed; 0 failed; finished in 0.05s
 ```
 
 ### Multi-Distribution Verification Matrix
