@@ -29,3 +29,4 @@ elif command -v sudo &>/dev/null && [ -f "${UDEV_DIR}/99-msi-mysticlight.rules" 
 fi
 
 echo "Uninstallation complete."
+

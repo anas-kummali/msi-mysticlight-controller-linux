@@ -60,3 +60,4 @@ def test_controller_mock_execution():
         written_reports.clear()
         ctrl.set_color(255, 0, 0, row=4)
         assert len(written_reports) == 4 * 3  # 4 zones in row 4, each sends mask + p_b + p_c
+

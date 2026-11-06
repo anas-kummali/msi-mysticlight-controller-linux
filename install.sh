@@ -83,3 +83,4 @@ else
     echo ""
     echo "Notice: Controller installed. If permission was denied, log out and back in for udev rules to apply."
 fi
+

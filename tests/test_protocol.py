@@ -105,3 +105,4 @@ def test_build_effect_packet():
     assert pkt[15:18] == bytearray([0, 255, 0])
     # Closing loop wraps to red
     assert pkt[23:26] == bytearray([255, 0, 0])
+

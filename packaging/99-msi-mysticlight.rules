@@ -16,3 +16,4 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1601", MODE="06
 # MSI Generic MysticLight matchers
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", MODE="0666", TAG+="uaccess"
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", MODE="0666", TAG+="uaccess"
+
