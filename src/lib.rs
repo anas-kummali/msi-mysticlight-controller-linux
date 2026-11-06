@@ -169,13 +169,17 @@ mod tests {
     #[test]
     fn test_security_device_override_rejection() {
         // Set an invalid environment override pointing to /etc/passwd or non-existent
-        std::env::set_var("MSI_KEYBOARD_DEVICE", "/etc/passwd");
+        unsafe {
+            std::env::set_var("MSI_KEYBOARD_DEVICE", "/etc/passwd");
+        }
         // /etc/passwd is a regular file, NOT a character device starting with /dev/hidraw
         let dev = find_device();
         if let Some(ref d) = dev {
             assert_ne!(d.to_str().unwrap(), "/etc/passwd");
             assert!(d.to_str().unwrap().starts_with("/dev/hidraw"));
         }
-        std::env::remove_var("MSI_KEYBOARD_DEVICE");
+        unsafe {
+            std::env::remove_var("MSI_KEYBOARD_DEVICE");
+        }
     }
 }
