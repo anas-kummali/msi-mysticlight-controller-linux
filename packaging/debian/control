@@ -1,0 +1,28 @@
+Source: msi-mysticlight
+Section: utils
+Priority: optional
+Maintainer: Anas Kummali <anas@milkbun.in>
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc (>= 1.70),
+               pkg-config
+Standards-Version: 4.6.2
+Homepage: https://github.com/anas-kummali/msi-mysticlight-controller-linux
+Vcs-Git: https://github.com/anas-kummali/msi-mysticlight-controller-linux.git
+Vcs-Browser: https://github.com/anas-kummali/msi-mysticlight-controller-linux
+
+Package: msi-mysticlight
+Architecture: any
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         udev
+Recommends: libxkbcommon0,
+            libgl1,
+            libwayland-client0,
+            libx11-6
+Description: MSI Mystic Light Controller & GUI for Linux
+ High-performance native Rust controller and GUI application for MSI
+ MysticLight 24-zone and 4-zone keyboard backlights. Integrates OpenRGB
+ and LightShow features into a single unified desktop experience with
+ real-time previews, 16 presets, custom gradients, hardware diagnostics,
+ and systemd user services.

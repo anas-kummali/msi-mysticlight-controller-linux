@@ -1,0 +1,19 @@
+-------------------------------------------------------------------
+Sat Nov 07 00:00:00 UTC 2026 - Anas Kummali <anas@milkbun.in>
+
+- Update to version 1.2.0:
+  * Complete Rust egui/eframe Studio GUI for MSI Mystic Light
+  * Full 24-zone and 4-zone per-key LED theme engine
+  * 16 curated dynamic presets: Aurora, Cyberpunk, Retrowave,
+    Vaporwave, Rainbow Wave, Ocean Breeze, Firestorm, and more
+  * Real-time custom color stop gradient engine
+  * Hardware diagnostics and USB hidraw sensor probe
+  * Udev hardware rules for unprivileged user access
+  * Systemd user units for auto-apply on login and resume
+
+-------------------------------------------------------------------
+Fri Nov 06 00:00:00 UTC 2026 - Anas Kummali <anas@milkbun.in>
+
+- Initial package release v1.1.0:
+  * CLI controller for MSI SteelSeries/MysticLight keyboards
+  * Static color and speed controls

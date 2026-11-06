@@ -4,12 +4,14 @@
 
 ### *High-Performance, Zero-Dependency Pure Rust Driver for MSI Laptop RGB Keyboards*
 
+[![GitHub Release](https://img.shields.io/github/v/release/anas-kummali/msi-mysticlight-controller-linux?style=for-the-badge&color=blue)](https://github.com/anas-kummali/msi-mysticlight-controller-linux/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](LICENSE)
 [![Rust: 2021](https://img.shields.io/badge/Rust-2021%20Edition-DEA584.svg?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Platform: Linux hidraw](https://img.shields.io/badge/Platform-Linux%20hidraw-FCC624.svg?style=for-the-badge&logo=linux&logoColor=black)](https://kernel.org/)
-[![Binary Size](https://img.shields.io/badge/Binary-564%20KB-2ea44f.svg?style=for-the-badge)]()
-[![Dependencies](https://img.shields.io/badge/Dependencies-Zero%20(Pure%20Stdlib)-blueviolet.svg?style=for-the-badge)]()
-[![Hardware](https://img.shields.io/badge/Hardware-24--Zone%20RGB-E05D44.svg?style=for-the-badge)]()
+[![Fedora COPR](https://img.shields.io/badge/Fedora-COPR%20Repo-294172.svg?style=for-the-badge&logo=fedora&logoColor=white)](https://copr.fedorainfracloud.org/coprs/anas-kummali/msi-mysticlight/)
+[![Arch AUR](https://img.shields.io/badge/Arch%20Linux-AUR-1793D1.svg?style=for-the-badge&logo=archlinux&logoColor=white)](https://aur.archlinux.org/packages/msi-mysticlight-bin)
+[![openSUSE OBS](https://img.shields.io/badge/openSUSE-OBS%20Repo-73BA25.svg?style=for-the-badge&logo=opensuse&logoColor=white)](https://build.opensuse.org/package/show/home:anas-kummali/msi-mysticlight)
+[![Ubuntu PPA](https://img.shields.io/badge/Ubuntu-Launchpad%20PPA-E95420.svg?style=for-the-badge&logo=ubuntu&logoColor=white)](https://launchpad.net/~anas-kummali/+archive/ubuntu/msi-mysticlight)
+[![GHCR Container](https://img.shields.io/badge/GHCR.io-Container%20Image-2088FF.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/anas-kummali/msi-mysticlight-controller-linux/pkgs/container/msi-mysticlight)
 [![CI Build](https://img.shields.io/badge/CI-Passing%20(Multi--Distro)-brightgreen.svg?style=for-the-badge&logo=github-actions&logoColor=white)](.github/workflows/ci.yml)
 
 <p align="center">
@@ -131,31 +133,98 @@ flowchart TD
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation & Distribution Repositories
 
-### Option 1: Pre-Built Distribution Packages (For Non-Technical Users)
+### Option 1: Native Package Managers & Distribution Repositories
 
-Download the ready-to-install package for your Linux distribution from [Releases](https://github.com/anas-kummali/msi-mysticlight-controller-linux/releases):
-
-#### Fedora / RHEL / openSUSE (`.rpm`)
+#### 🎩 Fedora Linux / RHEL / CentOS (COPR Repository)
+Enable the official Fedora COPR repository for automatic updates:
 ```bash
-sudo dnf install ./target/packages/msi-mysticlight-1.1.0-1.fc45.x86_64.rpm
-# Or install via rpm:
-sudo rpm -ivh msi-mysticlight-1.1.0-1.x86_64.rpm
+# Enable repository and install
+sudo dnf copr enable -y anas-kummali/msi-mysticlight
+sudo dnf install -y msi-mysticlight
+
+# Reload udev permissions and launch GUI
+sudo udevadm control --reload-rules && sudo udevadm trigger
+msi-mysticlight-gui
 ```
 
-#### Ubuntu / Debian / Pop!_OS / Linux Mint (`.deb`)
+#### 🏹 Arch Linux / Manjaro / EndeavourOS (AUR)
+Install using your preferred AUR helper:
 ```bash
-sudo apt install ./target/packages/msi-mysticlight_1.1.0_amd64.deb
-# Or install via dpkg:
-sudo dpkg -i msi-mysticlight_1.1.0_amd64.deb
+# Fast pre-compiled binary package (Recommended)
+yay -S msi-mysticlight-bin
+# Or with paru:
+paru -S msi-mysticlight-bin
+
+# Or build from source via AUR:
+yay -S msi-mysticlight
 ```
 
-*The packages automatically configure the desktop menu entry, application icon, udev permissions, and systemd resume services.*
+#### 🦎 openSUSE Tumbleweed & openSUSE Leap (OBS / Zypper)
+Add the official Open Build Service (OBS) repository:
+```bash
+# For openSUSE Tumbleweed:
+sudo zypper addrepo https://download.opensuse.org/repositories/home:anas-kummali/openSUSE_Tumbleweed/home:anas-kummali.repo
+sudo zypper refresh
+sudo zypper install -y msi-mysticlight
+
+# For openSUSE Leap 15.6:
+sudo zypper addrepo https://download.opensuse.org/repositories/home:anas-kummali/15.6/home:anas-kummali.repo
+sudo zypper refresh
+sudo zypper install -y msi-mysticlight
+```
+*(Also available via 1-Click Install in YaST Software).*
+
+#### 🐧 Ubuntu / Debian / Pop!_OS / Linux Mint (Launchpad PPA)
+```bash
+# Add Launchpad PPA and install
+sudo add-apt-repository -y ppa:anas-kummali/msi-mysticlight
+sudo apt-get update
+sudo apt-get install -y msi-mysticlight
+
+# Reload udev rules and launch GUI
+sudo udevadm control --reload-rules && sudo udevadm trigger
+msi-mysticlight-gui
+```
+
+#### 📦 Container Image (GitHub Container Registry - GHCR)
+Run instantly on any host via Podman or Docker with direct USB device access:
+```bash
+# Run CLI status check via Podman:
+podman run --rm --privileged -v /dev/bus/usb:/dev/bus/usb ghcr.io/anas-kummali/msi-mysticlight:latest --status
+
+# Light up keyboard to solid white at full brightness:
+podman run --rm --privileged -v /dev/bus/usb:/dev/bus/usb ghcr.io/anas-kummali/msi-mysticlight:latest -c white -B 10
+
+# Trigger hardware rainbow wave:
+podman run --rm --privileged -v /dev/bus/usb:/dev/bus/usb ghcr.io/anas-kummali/msi-mysticlight:latest -w
+```
 
 ---
 
-### Option 2: Automated Source Installer
+### Option 2: Standalone Release Packages (.rpm, .deb, .tar.gz)
+
+Download official signed packages directly from [GitHub Releases](https://github.com/anas-kummali/msi-mysticlight-controller-linux/releases/latest):
+
+* **RPM Package (Fedora 43/44/45, openSUSE, RHEL 9/10):**
+  ```bash
+  sudo dnf install ./msi-mysticlight-1.2.0-1.fc45.x86_64.rpm
+  ```
+* **DEB Package (Ubuntu 22.04/24.04/24.10, Debian 12, Linux Mint):**
+  ```bash
+  sudo apt install ./msi-mysticlight_1.2.0_amd64.deb
+  ```
+* **Universal Linux Binary Tarball:**
+  ```bash
+  tar -xzf msi-mysticlight-1.2.0-x86_64-linux.tar.gz
+  cd msi-mysticlight-1.2.0
+  ./install.sh
+  ```
+
+---
+
+### Option 3: Automated Source Installer
 
 Clone the repository and run the automated installer:
 

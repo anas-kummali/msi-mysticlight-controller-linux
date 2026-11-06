@@ -95,3 +95,4 @@ mod tests {
         let _ = query_power_info();
     }
 }
+

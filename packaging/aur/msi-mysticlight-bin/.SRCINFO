@@ -1,0 +1,22 @@
+pkgbase = msi-mysticlight-bin
+	pkgdesc = MSI Mystic Light Controller & GUI for Linux (24-Zone & 4-Zone Keyboards)
+	pkgver = 1.2.0
+	pkgrel = 1
+	url = https://github.com/anas-kummali/msi-mysticlight-controller-linux
+	arch = x86_64
+	license = GPL-3.0-only
+	depends = glibc
+	depends = gcc-libs
+	depends = systemd
+	depends = hicolor-icon-theme
+	optdepends = vulkan-driver: Vulkan graphics hardware acceleration backend
+	optdepends = mesa: OpenGL rendering backend
+	optdepends = wayland: Wayland native display support
+	optdepends = libx11: X11 display support
+	provides = msi-mysticlight
+	provides = msi-mysticlight-gui
+	conflicts = msi-mysticlight
+	source = https://github.com/anas-kummali/msi-mysticlight-controller-linux/releases/download/v1.2.0/msi-mysticlight-1.2.0-x86_64-linux.tar.gz
+	sha256sums = 721dca7447ebeef66c51eb3575d45ef0f34e5f6f1d427814e8c8c8bb978760ce
+
+pkgname = msi-mysticlight-bin

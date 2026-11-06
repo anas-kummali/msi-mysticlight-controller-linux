@@ -124,3 +124,4 @@ mod tests {
         assert_eq!(g[23], blue);
     }
 }
+

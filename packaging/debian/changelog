@@ -1,0 +1,13 @@
+msi-mysticlight (1.2.0-1) noble; urgency=medium
+
+  * Release v1.2.0.
+  * Added Mystic Light Studio GUI, themes, presets, hardware diagnostics.
+  * Integrated udev hardware rules and systemd user units.
+
+ -- Anas Kummali <anas@milkbun.in>  Sat, 07 Nov 2026 00:00:00 +0000
+
+msi-mysticlight (1.1.0-1) noble; urgency=medium
+
+  * Initial release v1.1.0.
+
+ -- Anas Kummali <anas@milkbun.in>  Fri, 06 Nov 2026 00:00:00 +0000

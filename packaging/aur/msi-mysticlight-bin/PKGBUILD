@@ -1,0 +1,44 @@
+# Maintainer: Anas Kummali <anas@milkbun.in>
+pkgname=msi-mysticlight-bin
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="MSI Mystic Light Controller & GUI for Linux (24-Zone & 4-Zone Keyboards)"
+arch=('x86_64')
+url="https://github.com/anas-kummali/msi-mysticlight-controller-linux"
+license=('GPL-3.0-only')
+depends=('glibc' 'gcc-libs' 'systemd' 'hicolor-icon-theme')
+optdepends=(
+    'vulkan-driver: Vulkan graphics hardware acceleration backend'
+    'mesa: OpenGL rendering backend'
+    'wayland: Wayland native display support'
+    'libx11: X11 display support'
+)
+provides=('msi-mysticlight' 'msi-mysticlight-gui')
+conflicts=('msi-mysticlight')
+source=("https://github.com/anas-kummali/msi-mysticlight-controller-linux/releases/download/v${pkgver}/msi-mysticlight-${pkgver}-x86_64-linux.tar.gz")
+sha256sums=('721dca7447ebeef66c51eb3575d45ef0f34e5f6f1d427814e8c8c8bb978760ce')
+
+package() {
+    cd "${srcdir}/msi-mysticlight-${pkgver}"
+
+    # Install binaries
+    install -Dm755 bin/msi-mysticlight "${pkgdir}/usr/bin/msi-mysticlight"
+    install -Dm755 bin/msi-mysticlight-gui "${pkgdir}/usr/bin/msi-mysticlight-gui"
+    ln -sf msi-mysticlight "${pkgdir}/usr/bin/msi-keyboard"
+    ln -sf msi-mysticlight "${pkgdir}/usr/bin/msi-rgb"
+
+    # Install udev rule
+    install -Dm644 packaging/99-msi-mysticlight.rules "${pkgdir}/usr/lib/udev/rules.d/99-msi-mysticlight.rules"
+
+    # Install systemd user services
+    install -Dm644 packaging/systemd/msi-keyboard.service "${pkgdir}/usr/lib/systemd/user/msi-keyboard.service"
+    install -Dm644 packaging/systemd/msi-keyboard-resume.service "${pkgdir}/usr/lib/systemd/user/msi-keyboard-resume.service"
+
+    # Install desktop entry and icon
+    install -Dm644 packaging/msi-mysticlight.desktop "${pkgdir}/usr/share/applications/msi-mysticlight.desktop"
+    install -Dm644 packaging/icons/msi-mysticlight.svg "${pkgdir}/usr/share/icons/hicolor/scalable/apps/msi-mysticlight.svg"
+
+    # Install license and documentation
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
