@@ -1,83 +1,82 @@
-# MSI 24-Zone Keyboard Backlight Linux Controller
+# MSI Mystic Light Linux
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Python: 3.8+](https://img.shields.io/badge/Python-3.8%2B-brightgreen.svg)](https://www.python.org/)
-[![Linux: Tested](https://img.shields.io/badge/Platform-Linux%20hidraw-orange.svg)](https://kernel.org/)
+[![Platform: Linux hidraw](https://img.shields.io/badge/Platform-Linux%20hidraw-orange.svg)](https://kernel.org/)
+[![Hardware: 24--Zone RGB](https://img.shields.io/badge/Hardware-24--Zone%20RGB-purple.svg)]()
 
-A lightweight, zero-dependency Linux command-line tool and driver for **MSI 24-Zone RGB Gaming Keyboards** (such as the **MSI Vector 16 HX AI**, **Vector A18 HX**, **Crosshair 16**, and **Pulse/Katana** series).
+A robust, zero-dependency Linux command-line tool and driver for **MSI Gaming Laptop Keyboard Backlights** (including **MSI Vector 16 HX AI**, **Vector A18 HX**, **Crosshair 16**, **Katana**, **Pulse**, and **Raider** series).
 
-This tool fixes the infamous **"Keyboard backlight only works in the first 3 rows"** issue on Linux, restoring full-board illumination across all 6 physical rows.
+This driver resolves the notorious **"Keyboard backlight only works in first 3 rows"** issue on Linux, providing complete control over all 6 physical rows, 24 individual zones, animations, and sleep/resume persistence.
 
 ---
 
 ## The Problem: The 3-Row Limitation on Linux
 
-On modern MSI laptops equipped with 24-Zone RGB keyboards (e.g. `1462:1603`), existing Linux RGB utilities (such as OpenRGB or LightShow) only illuminate the top three rows of the keyboard:
+On modern MSI laptops equipped with multi-zone Mystic Light keyboards (e.g. USB HID `1462:1603` / `MSI MysticLight MS-1603`), standard Linux RGB tools only illuminate the top three rows:
 
-* **Row 1:** `ESC` to `DEL` (illuminated)
-* **Row 2:** `` ` `` to `BACKSPACE` (illuminated)
-* **Row 3:** `TAB` to `\` (illuminated)
+* **Row 1:** `ESC` to `DEL` *(Illuminated)*
+* **Row 2:** `` ` `` to `BACKSPACE` *(Illuminated)*
+* **Row 3:** `TAB` to `\` *(Illuminated)*
 * **Row 4:** `CAPS` to `ENTER` (**DARK / UNLIT**)
 * **Row 5:** `SHIFT` to `SHIFT` (**DARK / UNLIT**)
 * **Row 6:** `CTRL` to `CTRL` / `Space` / `Arrows` (**DARK / UNLIT**)
 
 ### Root Cause
-1. **4-Zone Assumption:** Legacy reverse-engineered tools assumed the keyboard had only 4 macro zones (like older Katana MS-1565 or Crosshair MS-1801 boards) and sent a 4-bit zone mask: `0x0F` (`0000 1111b`).
-2. **24-Zone Matrix:** The hardware keyboard is actually organized as **6 physical rows $\times$ 4 zones per row = 24 zones**.
-3. **Mask Cutoff:** In 24-zone hardware, bits 0..3 only correspond to the first block (Rows 1–3). Because higher-order mask bytes and mode packet filters (`p[7]`) were hardcoded to `0x0F`, zones 4 through 23 were permanently suppressed by the firmware.
+1. **Legacy 4-Zone Mask Assumption:** Older utilities assumed 4 macro zones and sent a 4-bit zone mask `0x0F` (`0000 1111b`).
+2. **24-Zone Physical Matrix:** The actual keyboard hardware controller multiplexes **6 physical rows $\times$ 4 zones per row = 24 discrete zones**.
+3. **Firmware Filter:** Because mode packets and zone filters were limited to `0x0F`, zones 4 through 23 were permanently masked off by the onboard microcontroller.
 
 ---
 
-## How This Tool Solves It
+## How This Driver Solves It
 
-* **256-Bit Global Prep Packet:** Sends `[0x02, 0x01] + [0xFF] * 32` to select and prepare all 24 zones simultaneously.
-* **Full-Zone Extended Mode Packets:** Clears the `0x0F` filter byte to `0xFF`, allowing the controller to broadcast color and hardware animation cycles to all zones.
-* **Dual-Stack HID Transmission:** Concurrently dispatches Format B keyframes, OEM MSI Center packets (`0x58` profile slot), and Format A global hardware registers.
-* **Individual Row & Zone Addressing:** Supports targeting specific rows (`-r 1` to `-r 6`) or individual zones (`-z 0` to `-z 23`).
-* **Zero Dependencies:** Uses standard Linux Python with direct `ioctl(HIDIOCSFEATURE)` calls over `/dev/hidraw*`. No heavy frameworks, daemons, or background CPU usage.
+* **256-Bit Global Prep Packet:** Dispatches `[0x02, 0x01] + [0xFF] * 32` over `ioctl(HIDIOCSFEATURE)` to assert and configure all 24 zones simultaneously.
+* **Full-Matrix Mode Packets:** Sets unmasked filter flags (`0xFF`) in Format B mode reports, broadcasting RGB parameters across all rows.
+* **OEM MSI Center Hardware Slot:** Concurrently updates register slot `0x58`, matching OEM Windows software behavior.
+* **Granular Control:** Supports full-board lighting, individual row targeting (`-r 1` through `-r 6`), and individual zone addressing (`-z 0` through `-z 23`).
+* **Zero Dependencies:** Pure Python standard library interacting with Linux `/dev/hidraw*`. No background daemons, bloated runtimes, or CPU usage during static lighting or hardware-driven animations.
 
 ---
 
 ## Hardware Compatibility
 
-| Model | USB VID:PID | HID Device Name | Keyboard Architecture |
-| :--- | :--- | :--- | :--- |
-| **MSI Vector 16 HX AI (A2XWHG / MS-1603)** | `1462:1603` | `MSI MysticLight MS-1603` | **24-Zone RGB** (Verified) |
-| **MSI Vector A18 HX (MS-1605)** | `0db0:1605` | `MSI MysticLight MS-1605` | **24-Zone RGB** |
-| **MSI Crosshair 16 Max HX (MS-1801)** | `0db0:1801` | `MSI MysticLight MS-1801` | 4-Zone RGB |
-| **MSI Cyborg 15 (MS-1606)** | `0db0:1606` | `MSI MysticLight MS-1606` | 4-Zone RGB |
-| **MSI Katana 15 HX (MS-1565)** | `1462:1601` | `MSI MysticLight MS-1565` | 4-Zone RGB |
-| **MSI Delta 15 (MS-1562)** | `1462:1562` | `MSI MysticLight MS-1562` | 4-Zone RGB |
-| **MSI Alpha 15 / 17 (MS-1563)** | `1462:1563` | `MSI MysticLight MS-1563` | 4-Zone RGB |
+| Model Series | USB VID:PID | HID Device Name | Keyboard Architecture | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **MSI Vector 16 HX AI (A2XWHG / MS-1603)** | `1462:1603` | `MSI MysticLight MS-1603` | **24-Zone Matrix (6 Rows $\times$ 4)** | **Verified** |
+| **MSI Vector A18 HX (MS-1605)** | `0db0:1605` | `MSI MysticLight MS-1605` | **24-Zone Matrix (6 Rows $\times$ 4)** | Supported |
+| **MSI Crosshair 16 Max HX (MS-1801)** | `0db0:1801` | `MSI MysticLight MS-1801` | 4-Zone / 24-Zone Matrix | Supported |
+| **MSI Cyborg 15 (MS-1606)** | `0db0:1606` | `MSI MysticLight MS-1606` | 4-Zone RGB | Supported |
+| **MSI Katana 15 HX (MS-1565)** | `1462:1601` | `MSI MysticLight MS-1565` | 4-Zone RGB | Supported |
+| **MSI Delta 15 (MS-1562)** | `1462:1562` | `MSI MysticLight MS-1562` | 4-Zone RGB | Supported |
+| **MSI Alpha 15 / 17 (MS-1563)** | `1462:1563` | `MSI MysticLight MS-1563` | 4-Zone RGB | Supported |
 
 ---
 
 ## Installation
 
-### Option 1: Quick Automated Install (Recommended)
-
-Clone the repository and run `install.sh`:
+### Method 1: Automated Installer (Recommended)
 
 ```bash
-git clone https://github.com/anas-kummali/msi-24zone-keyboard.git
-cd msi-24zone-keyboard
+git clone https://github.com/anas-kummali/msi-mysticlight-linux.git
+cd msi-mysticlight-linux
 ./install.sh
 ```
 
 The installer will:
-1. Install `msi-keyboard` (and alias `msi-rgb`) to `~/.local/bin/`.
-2. Install `/etc/udev/rules.d/99-msi-mysticlight.rules` so you can control lighting without `sudo`.
-3. Enable systemd user service to restore your backlight settings across reboots and suspend/resume cycles.
+1. Install `msi-mysticlight` (with aliases `msi-keyboard` and `msi-rgb`) to `~/.local/bin/`.
+2. Configure `/etc/udev/rules.d/99-msi-mysticlight.rules` for non-root hardware access.
+3. Install systemd user service for persistence on boot and resume after suspend.
 
-### Option 2: Pip / Pipx Installation
+### Method 2: Python / Pipx
 
 ```bash
 pip install .
-# or for isolated global installation:
+# or for an isolated environment:
 pipx install .
 ```
 
-Then copy the udev rule manually:
+To configure non-root udev rules manually:
 ```bash
 sudo cp packaging/99-msi-mysticlight.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && sudo udevadm trigger
@@ -85,78 +84,77 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 ---
 
-## Usage & Examples
+## Usage
 
-### Static Colors (Full Board)
+### 1. Static Colors (Full Board)
 
 ```bash
-# Set all 6 rows to bright solid white (maximum brightness 10/10)
-msi-keyboard -c white -B 10
+# Set all 6 rows to solid white at maximum brightness (10/10)
+msi-mysticlight -c white -B 10
 
-# Set all 6 rows to custom hex color at 80% brightness
-msi-keyboard -c "#FF8000" -B 8
+# Set full board to custom hex color
+msi-mysticlight -c "#00D4FF" -B 8
 
 # Available color presets: white, warmwhite, red, green, blue, cyan, magenta, purple, yellow, orange, ice
-msi-keyboard -c ice
+msi-mysticlight -c ice
 ```
 
-### Row-by-Row Targeting
+### 2. Row-by-Row Independent Lighting
 
-You can illuminate individual physical rows independently:
+Control individual keyboard rows independently:
 
 ```bash
-# Set only Row 1 (ESC to DEL) to Red
-msi-keyboard -c red -r 1
+# Set Row 1 (ESC to DEL) to Red
+msi-mysticlight -c red -r 1
 
 # Set Row 4 (CAPS to ENTER) to Green
-msi-keyboard -c green -r 4
+msi-mysticlight -c green -r 4
 
-# Set Row 6 (CTRL / Space / Arrows) to Blue
-msi-keyboard -c blue -r 6
+# Set Row 6 (CTRL, Space, Arrows, Numpad) to Blue
+msi-mysticlight -c blue -r 6
 ```
 
-#### Row Layout Reference
-* **Row 1:** `ESC`, `F1`..`F12`, `DEL` (Zones 0..3)
-* **Row 2:** `` ` ``, `1`..`0`, `-`, `=`, `BACKSPACE` (Zones 4..7)
-* **Row 3:** `TAB`, `Q`..`P`, `[`, `]`, `\` (Zones 8..11)
-* **Row 4:** `CAPS LOCK`, `A`..`L`, `;`, `'`, `ENTER` (Zones 12..15)
-* **Row 5:** `LSHIFT`, `Z`..`/`, `RSHIFT` (Zones 16..19)
-* **Row 6:** `LCTRL`, `FN`, `SUPER`, `ALT`, `SPACEBAR`, `RCTRL`, `ARROWS`, `NUMPAD` (Zones 20..23)
+#### Physical Row Mapping
+* **Row 1:** `ESC`, `F1`..`F12`, `DEL` *(Zones 0..3)*
+* **Row 2:** `` ` ``, `1`..`0`, `-`, `=`, `BACKSPACE` *(Zones 4..7)*
+* **Row 3:** `TAB`, `Q`..`P`, `[`, `]`, `\` *(Zones 8..11)*
+* **Row 4:** `CAPS LOCK`, `A`..`L`, `;`, `'`, `ENTER` *(Zones 12..15)*
+* **Row 5:** `LSHIFT`, `Z`..`/`, `RSHIFT` *(Zones 16..19)*
+* **Row 6:** `LCTRL`, `FN`, `SUPER`, `ALT`, `SPACEBAR`, `RCTRL`, `ARROWS`, `NUMPAD` *(Zones 20..23)*
 
-### Hardware Animated Effects
+### 3. Hardware-Driven Animations
 
-Because animations run directly on the keyboard microcontroller's internal timer, they consume **0% CPU**:
+Animations are computed on-chip by the keyboard firmware, consuming **0% system CPU**:
 
 ```bash
 # Rainbow Wave across all 6 rows
-msi-keyboard -w
+msi-mysticlight -w
 
-# Breathing effect with custom color
-msi-keyboard -b -c magenta
+# Breathing pulse with custom color
+msi-mysticlight -b -c magenta
 
-# Spectrum Color Cycle effect
-msi-keyboard -s
+# Color Spectrum Cycle
+msi-mysticlight -s
 ```
 
-### Turn Off Backlight
+### 4. Turn Off Backlight
 
 ```bash
-# Cut power to all keyboard LEDs across all 6 rows
-msi-keyboard -o
-# or
-msi-keyboard -B 0
+msi-mysticlight -o
+# or set brightness to 0:
+msi-mysticlight -B 0
 ```
 
-### Inspect Hardware & Zone Status
+### 5. Hardware Status & Diagnostics
 
 ```bash
-msi-keyboard --status
+msi-mysticlight --status
 ```
 
 *Example Output:*
 ```text
 ==================================================
- MSI 24-Zone Keyboard Backlight Controller
+ MSI Mystic Light Linux Controller
  Version : 1.0.0
 ==================================================
 Device Node     : /dev/hidraw3
@@ -177,9 +175,9 @@ Physical Row Layout:
 
 ---
 
-## Sleep & Resume Persistence
+## Suspend & Resume Persistence
 
-When your laptop suspends, USB power to the keyboard controller is cut. The included systemd user unit automatically restores your preferred backlight setting upon wake:
+When laptops sleep or enter suspend-to-RAM, USB bus power to the keyboard microcontroller is reset. The included systemd user service restores your configured backlight upon wake:
 
 ```bash
 systemctl --user enable msi-keyboard-resume.service
@@ -187,30 +185,18 @@ systemctl --user enable msi-keyboard-resume.service
 
 ---
 
-## Troubleshooting
+## Testing & Quality
 
-### "Permission denied on /dev/hidrawX"
-Ensure the udev rule is installed and reloaded:
+Run the test suite using `pytest`:
+
 ```bash
-sudo cp packaging/99-msi-mysticlight.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger
+pytest
 ```
-If you still receive permission errors, log out and log back in, or check that your user account has access to `uaccess`.
-
----
-
-## Contributing & Testing
-
-Run unit tests with pytest:
-```bash
-pytest tests/
-```
-
-Pull requests and device reports for additional MSI laptop models are welcome!
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License as published by the Free Software Foundation, version 3 (GPL-3.0)**.
 
+See the [LICENSE](LICENSE) file for complete license text.

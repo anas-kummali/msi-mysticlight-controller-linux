@@ -5,7 +5,7 @@ BIN_DIR="${HOME}/.local/bin"
 UDEV_DIR="/etc/udev/rules.d"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 
-echo "=== Uninstalling MSI 24-Zone Keyboard Controller ==="
+echo "=== Uninstalling MSI Mystic Light Linux Controller ==="
 
 # 1. Stop and disable systemd services
 if command -v systemctl &>/dev/null; then
@@ -16,6 +16,7 @@ rm -f "${SYSTEMD_USER_DIR}/msi-keyboard.service"
 rm -f "${SYSTEMD_USER_DIR}/msi-keyboard-resume.service"
 
 # 2. Remove binaries
+rm -f "${BIN_DIR}/msi-mysticlight"
 rm -f "${BIN_DIR}/msi-keyboard"
 rm -f "${BIN_DIR}/msi-rgb"
 

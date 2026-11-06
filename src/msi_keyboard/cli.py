@@ -1,4 +1,4 @@
-"""Command line interface for msi-keyboard / msi-rgb."""
+"""Command line interface for msi-mysticlight / msi-keyboard / msi-rgb."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from msi_keyboard.controller import MSIKeyboardController, parse_color
 def print_status(controller: MSIKeyboardController) -> None:
     info = controller.get_device_info()
     print("=" * 50)
-    print(" MSI 24-Zone Keyboard Backlight Controller")
+    print(" MSI Mystic Light Linux Controller")
     print(f" Version : {__version__}")
     print("=" * 50)
     print(f"Device Node     : {info.get('node')}")
@@ -39,18 +39,18 @@ def print_status(controller: MSIKeyboardController) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="msi-keyboard",
-        description="MSI 24-Zone Linux Keyboard Backlight Controller (Vector 16 HX AI, Crosshair, Katana, etc.)",
+        prog="msi-mysticlight",
+        description="MSI Mystic Light Linux — Keyboard Backlight Controller (Vector 16 HX AI, Crosshair, Pulse, Katana, etc.)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
-  msi-keyboard -c white -B 10       # Set all 6 rows to bright white
-  msi-keyboard -c "#FF8000"         # Set all rows to custom orange
-  msi-keyboard -c red -r 1          # Set only Row 1 (ESC to DEL) to red
-  msi-keyboard -w                   # Activate rainbow wave effect across all 6 rows
-  msi-keyboard -b -c cyan           # Activate cyan breathing effect
-  msi-keyboard -s                   # Activate color cycle effect
-  msi-keyboard -o                   # Power off backlight completely
-  msi-keyboard --status             # Show controller & device status
+  msi-mysticlight -c white -B 10       # Set all 6 rows to bright white
+  msi-mysticlight -c "#FF8000"         # Set all rows to custom orange
+  msi-mysticlight -c red -r 1          # Set only Row 1 (ESC to DEL) to red
+  msi-mysticlight -w                   # Activate rainbow wave effect across all 6 rows
+  msi-mysticlight -b -c cyan           # Activate cyan breathing effect
+  msi-mysticlight -s                   # Activate color cycle effect
+  msi-mysticlight -o                   # Power off backlight completely
+  msi-mysticlight --status             # Show controller & device status
 """,
     )
     parser.add_argument(

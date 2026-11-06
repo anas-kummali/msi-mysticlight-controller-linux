@@ -3,22 +3,23 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "msi-24zone-keyboard"
+name = "msi-mysticlight-linux"
 version = "1.0.0"
-description = "Linux keyboard backlight controller for MSI 24-Zone Gaming Laptops (Vector 16 HX AI, Crosshair, etc.)"
+description = "Linux keyboard backlight controller for MSI Gaming Laptops with Mystic Light (Vector 16 HX AI, Crosshair, Pulse, Raider, etc.)"
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
+license = { text = "GPL-3.0-or-later" }
 authors = [
     { name = "Anas Kummali", email = "anas@milkbun.in" }
 ]
 keywords = [
     "msi",
+    "mysticlight",
     "keyboard",
     "backlight",
     "rgb",
-    "mysticlight",
     "vector-16-hx",
+    "gaming-laptop",
     "linux",
     "hidraw"
 ]
@@ -26,7 +27,7 @@ classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -40,6 +41,7 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
+msi-mysticlight = "msi_keyboard.cli:main"
 msi-keyboard = "msi_keyboard.cli:main"
 msi-rgb = "msi_keyboard.cli:main"
 
@@ -49,5 +51,3 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-
-

@@ -6,21 +6,20 @@ BIN_DIR="${HOME}/.local/bin"
 UDEV_DIR="/etc/udev/rules.d"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 
-echo "=== MSI 24-Zone Keyboard Linux Installer ==="
+echo "=== MSI Mystic Light Linux Installer ==="
 
 # 1. Ensure bin dir exists
 mkdir -p "${BIN_DIR}"
 
 # 2. Install executable wrapper
-echo "[1/4] Installing executable to ${BIN_DIR}/msi-keyboard..."
-cat << 'EOF' > "${BIN_DIR}/msi-keyboard"
+echo "[1/4] Installing executable to ${BIN_DIR}/msi-mysticlight..."
+cat << EOF > "${BIN_DIR}/msi-mysticlight"
 #!/usr/bin/env python3
 import sys
 import os
 
-# Add package directory to path if running in-tree
-current_dir = os.path.dirname(os.path.realpath(__file__))
-repo_src = os.path.abspath(os.path.join(current_dir, "../../src"))
+# Priority 1: In-tree src directory
+repo_src = "${SCRIPT_DIR}/src"
 if os.path.isdir(repo_src) and repo_src not in sys.path:
     sys.path.insert(0, repo_src)
 
@@ -29,8 +28,9 @@ from msi_keyboard.cli import main
 if __name__ == "__main__":
     main()
 EOF
-chmod +x "${BIN_DIR}/msi-keyboard"
-ln -sf "${BIN_DIR}/msi-keyboard" "${BIN_DIR}/msi-rgb"
+chmod +x "${BIN_DIR}/msi-mysticlight"
+ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-keyboard"
+ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-rgb"
 
 # Also install python package if pip/uv available
 if command -v pip &>/dev/null; then
@@ -43,7 +43,9 @@ fi
 
 # 3. Install udev rule
 echo "[2/4] Setting up udev rules for non-root USB access..."
-if [ -w "${UDEV_DIR}" ]; then
+if [ -f "${UDEV_DIR}/99-msi-mysticlight.rules" ] && grep -q "1603" "${UDEV_DIR}/99-msi-mysticlight.rules" 2>/dev/null; then
+    echo "      Udev rule already active in ${UDEV_DIR}/99-msi-mysticlight.rules."
+elif [ -w "${UDEV_DIR}" ]; then
     cp "${SCRIPT_DIR}/packaging/99-msi-mysticlight.rules" "${UDEV_DIR}/"
     udevadm control --reload-rules && udevadm trigger
 elif command -v sudo &>/dev/null; then
@@ -68,17 +70,18 @@ fi
 
 # 5. Test execution
 echo "[4/4] Verifying keyboard hardware status..."
-if "${BIN_DIR}/msi-keyboard" --status; then
+if "${BIN_DIR}/msi-mysticlight" --status; then
     echo ""
     echo "Initializing backlight to solid bright white across all 6 rows..."
-    "${BIN_DIR}/msi-keyboard" -c white -B 10 || true
+    "${BIN_DIR}/msi-mysticlight" -c white -B 10 || true
     echo ""
     echo "=== Installation Successful! ==="
     echo "Make sure ${BIN_DIR} is in your PATH."
     echo "Test commands:"
-    echo "  msi-keyboard -c white -B 10"
-    echo "  msi-keyboard -w"
-    echo "  msi-keyboard --status"
+    echo "  msi-mysticlight -c white -B 10"
+    echo "  msi-mysticlight -w"
+    echo "  msi-mysticlight --status"
+    echo "  (Aliases 'msi-keyboard' and 'msi-rgb' are also available)"
 else
     echo ""
     echo "Notice: Controller installed. If permission was denied, log out and back in for udev rules to apply."

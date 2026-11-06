@@ -1,11 +1,11 @@
 [Unit]
-Description=MSI Keyboard RGB Backlight Restore on Resume
-Documentation=https://github.com/anas-kummali/msi-24zone-keyboard
+Description=MSI Mystic Light Keyboard RGB Backlight Restore on Resume
+Documentation=https://github.com/anas-kummali/msi-mysticlight-linux
 After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/.local/bin/msi-keyboard -c white -B 10
+ExecStart=%h/.local/bin/msi-mysticlight -c white -B 10
 
 [Install]
 WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
