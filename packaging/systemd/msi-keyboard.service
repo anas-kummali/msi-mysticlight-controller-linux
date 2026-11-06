@@ -1,0 +1,12 @@
+[Unit]
+Description=MSI Keyboard RGB Backlight Initialization
+Documentation=https://github.com/anas-kummali/msi-24zone-keyboard
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/msi-keyboard -c white -B 10
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

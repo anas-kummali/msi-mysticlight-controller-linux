@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "msi-24zone-keyboard"
+version = "1.0.0"
+description = "Linux keyboard backlight controller for MSI 24-Zone Gaming Laptops (Vector 16 HX AI, Crosshair, etc.)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Anas Kummali", email = "anas@milkbun.in" }
+]
+keywords = [
+    "msi",
+    "keyboard",
+    "backlight",
+    "rgb",
+    "mysticlight",
+    "vector-16-hx",
+    "linux",
+    "hidraw"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Hardware :: Hardware Drivers",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.scripts]
+msi-keyboard = "msi_keyboard.cli:main"
+msi-rgb = "msi_keyboard.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
