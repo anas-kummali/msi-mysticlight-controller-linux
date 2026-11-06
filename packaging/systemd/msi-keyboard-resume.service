@@ -1,6 +1,6 @@
 [Unit]
-Description=MSI Mystic Light Keyboard RGB Backlight Restore on Resume
-Documentation=https://github.com/anas-kummali/msi-mysticlight-linux
+Description=MSI Mystic Light Controller for Linux - Backlight Restore on Resume
+Documentation=https://github.com/anas-kummali/msi-mysticlight-controller-linux
 After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
 
 [Service]

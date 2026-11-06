@@ -19,7 +19,7 @@ from msi_keyboard.controller import MSIKeyboardController, parse_color
 def print_status(controller: MSIKeyboardController) -> None:
     info = controller.get_device_info()
     print("=" * 50)
-    print(" MSI Mystic Light Linux Controller")
+    print(" MSI Mystic Light Controller for Linux")
     print(f" Version : {__version__}")
     print("=" * 50)
     print(f"Device Node     : {info.get('node')}")
@@ -40,7 +40,7 @@ def print_status(controller: MSIKeyboardController) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="msi-mysticlight",
-        description="MSI Mystic Light Linux — Keyboard Backlight Controller (Vector 16 HX AI, Crosshair, Pulse, Katana, etc.)",
+        description="MSI Mystic Light Controller for Linux — Keyboard Backlight Driver (Vector 16 HX AI, Crosshair, Pulse, Katana, etc.)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   msi-mysticlight -c white -B 10       # Set all 6 rows to bright white

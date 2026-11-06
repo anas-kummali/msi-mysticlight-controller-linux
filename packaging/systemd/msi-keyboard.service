@@ -1,6 +1,6 @@
 [Unit]
-Description=MSI Mystic Light Keyboard RGB Backlight Initialization
-Documentation=https://github.com/anas-kummali/msi-mysticlight-linux
+Description=MSI Mystic Light Controller for Linux - Backlight Initialization
+Documentation=https://github.com/anas-kummali/msi-mysticlight-controller-linux
 After=default.target
 
 [Service]

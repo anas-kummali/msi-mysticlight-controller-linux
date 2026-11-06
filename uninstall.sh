@@ -5,7 +5,7 @@ BIN_DIR="${HOME}/.local/bin"
 UDEV_DIR="/etc/udev/rules.d"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 
-echo "=== Uninstalling MSI Mystic Light Linux Controller ==="
+echo "=== Uninstalling MSI Mystic Light Controller for Linux ==="
 
 # 1. Stop and disable systemd services
 if command -v systemctl &>/dev/null; then

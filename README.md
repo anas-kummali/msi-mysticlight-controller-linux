@@ -1,4 +1,4 @@
-# MSI Mystic Light Linux
+# MSI Mystic Light Controller for Linux
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Python: 3.8+](https://img.shields.io/badge/Python-3.8%2B-brightgreen.svg)](https://www.python.org/)
@@ -58,8 +58,8 @@ On modern MSI laptops equipped with multi-zone Mystic Light keyboards (e.g. USB 
 ### Method 1: Automated Installer (Recommended)
 
 ```bash
-git clone https://github.com/anas-kummali/msi-mysticlight-linux.git
-cd msi-mysticlight-linux
+git clone https://github.com/anas-kummali/msi-mysticlight-controller-linux.git
+cd msi-mysticlight-controller-linux
 ./install.sh
 ```
 
@@ -154,7 +154,7 @@ msi-mysticlight --status
 *Example Output:*
 ```text
 ==================================================
- MSI Mystic Light Linux Controller
+ MSI Mystic Light Controller for Linux
  Version : 1.0.0
 ==================================================
 Device Node     : /dev/hidraw3

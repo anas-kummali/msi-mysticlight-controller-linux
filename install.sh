@@ -6,7 +6,7 @@ BIN_DIR="${HOME}/.local/bin"
 UDEV_DIR="/etc/udev/rules.d"
 SYSTEMD_USER_DIR="${HOME}/.config/systemd/user"
 
-echo "=== MSI Mystic Light Linux Installer ==="
+echo "=== MSI Mystic Light Controller for Linux Installer ==="
 
 # 1. Ensure bin dir exists
 mkdir -p "${BIN_DIR}"

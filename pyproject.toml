@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "msi-mysticlight-linux"
+name = "msi-mysticlight-controller-linux"
 version = "1.0.0"
-description = "Linux keyboard backlight controller for MSI Gaming Laptops with Mystic Light (Vector 16 HX AI, Crosshair, Pulse, Raider, etc.)"
+description = "MSI Mystic Light Controller for Linux — Keyboard backlight driver for MSI Gaming Laptops (Vector 16 HX AI, Crosshair, Pulse, Katana, Raider, etc.)"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "GPL-3.0-or-later" }
