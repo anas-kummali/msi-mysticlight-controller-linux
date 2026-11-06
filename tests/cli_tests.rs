@@ -96,3 +96,4 @@ fn test_cli_invalid_zone() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(stderr.contains("out of range"));
 }
+
