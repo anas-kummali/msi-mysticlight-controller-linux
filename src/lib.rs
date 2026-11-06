@@ -16,7 +16,7 @@ pub mod theme;
 #[cfg(feature = "gui")]
 pub mod gui;
 
-pub const VERSION: &str = "1.1.0";
+pub const VERSION: &str = "1.2.0";
 
 // Re-export primary public types and utilities
 pub use color::{parse_color, Rgb, COLORS};

@@ -176,11 +176,11 @@ mod tests {
         assert_eq!(p.len(), 64);
         assert_eq!(p[0], 0x02);
         assert_eq!(p[1], 0x01);
-        for i in 2..34 {
-            assert_eq!(p[i], 0xFF, "byte {} must be 0xFF", i);
+        for (i, &byte) in p[2..34].iter().enumerate() {
+            assert_eq!(byte, 0xFF, "byte {} must be 0xFF", i + 2);
         }
-        for i in 34..64 {
-            assert_eq!(p[i], 0x00, "byte {} must be 0x00", i);
+        for (i, &byte) in p[34..64].iter().enumerate() {
+            assert_eq!(byte, 0x00, "byte {} must be 0x00", i + 34);
         }
     }
 

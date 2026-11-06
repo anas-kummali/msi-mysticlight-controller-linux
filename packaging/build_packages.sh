@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-VERSION="1.1.0"
+VERSION="1.2.0"
 OUT_DIR="${ROOT_DIR}/target/packages"
 
 echo "=== Packaging MSI Mystic Light v${VERSION} ==="
@@ -155,3 +155,4 @@ ls -lh "${OUT_DIR}"
 echo ""
 echo "Checksums (SHA-256):"
 sha256sum "${OUT_DIR}"/*
+

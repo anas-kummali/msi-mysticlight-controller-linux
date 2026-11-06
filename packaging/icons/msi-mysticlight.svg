@@ -64,3 +64,4 @@
   <!-- Central RGB Spark Indicator -->
   <polygon points="128,26 133,39 146,44 133,49 128,62 123,49 110,44 123,39" fill="#00FFFF" filter="url(#glow)" />
 </svg>
+

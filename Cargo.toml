@@ -1,6 +1,6 @@
 [package]
 name = "msi-mysticlight"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 authors = ["Anas Kummali <anas@milkbun.in>"]
 description = "MSI Mystic Light Controller & GUI for Linux (24-Zone & 4-Zone Keyboards)"

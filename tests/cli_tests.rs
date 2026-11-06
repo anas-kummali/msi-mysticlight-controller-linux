@@ -35,7 +35,7 @@ fn test_cli_version() {
     let out = Command::new(&bin).arg("--version").output().expect("failed to run bin");
     assert!(out.status.success());
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert_eq!(stdout.trim(), "msi-mysticlight 1.1.0");
+    assert_eq!(stdout.trim(), "msi-mysticlight 1.2.0");
 }
 
 #[test]

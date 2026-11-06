@@ -186,15 +186,17 @@ Generated packages are written to `target/packages/`.
 
 ---
 
-## 🖥️ Native Graphical User Interface (GUI)
+## 🖥️ Modern Native Graphical User Interface (GUI)
 
-The suite includes a native Rust GUI app (`msi-mysticlight-gui` / `msi-mysticlight --gui`) integrating OpenRGB and LightShow capabilities:
+The suite includes a modern native Rust GUI app (`msi-mysticlight-gui` / `msi-mysticlight --gui`) integrating OpenRGB and LightShow capabilities into an ergonomic Libadwaita / Tokyo Night styled control center:
 
-* **Interactive 24-Zone Keyboard Matrix:** Real-time visual representation of all 6 physical rows $\times$ 4 zones with per-zone color preview and selection.
-* **Studio Themes & Presets:** Tokyo Night, Cyberpunk Neon, Synthwave Sunset, Matrix Code, Arctic Frost, Nord Aurora, Tactical Crimson, and Sovereign White.
-* **Hardware Animation Engine:** Rainbow Wave, Chromatic Spectrum Cycle, and Breathing effects with interactive speed sliders.
-* **RGB Color Wheel & Hex Input:** Interactive color picker and brightness slider [0..10].
-* **Diagnostics & Troubleshooting:** Real-time hidraw device node, permissions, and topology inspector.
+* **Authentic Physical Keyboard Matrix Canvas:** Full visual representation of all 6 physical rows $\times$ 4 zones with physical keycaps (`ESC`, `QWERTY`, `SPACE`, etc.), key labels, zone badges, and glowing LED underglow halos.
+* **Real-Time On-Screen Animation Mirroring:** Dynamically previews Rainbow Wave, Spectrum Cycle, and Breathing animations on the virtual keyboard at 60 FPS in sync with the hardware microcontroller.
+* **Theme Studio & Profile Management:** Curated cross-row themes with interactive chromatic ribbon previews (Tokyo Night, Cyberpunk Neon, Synthwave Sunset, Matrix Code, Arctic Frost, Nord Aurora, Tactical Crimson, Sovereign White, and Warm Amber).
+* **Hardware Effects Gallery:** One-click activation of Rainbow Wave, Chromatic Spectrum Cycle, Breathing Pulse, and Power Off with customizable step and fade sliders.
+* **Studio Color Controls & Swatches:** Integrated HSV color wheel, precise 8-bit RGB channel sliders, hexadecimal input, and gaming preset swatches with instant single-click application.
+* **Persistent Bottom Master Action Deck:** Always-accessible master brightness slider [0..10], quick-action buttons (Solid White, Rainbow Wave, Power Off), and live hardware status toast.
+* **Diagnostics & Diagnostics Inspector:** Real-time kernel hidraw device node, udev permissions, matrix topology inspector, and non-root permission repair guide.
 
 ```bash
 # Launch GUI directly
@@ -204,7 +206,7 @@ msi-mysticlight-gui
 msi-mysticlight --gui
 ```
 
-*(You can also launch it anytime by searching "MSI Mystic Light" in your desktop app launcher!)*
+*(You can also launch it anytime by searching "MSI Mystic Light" in your desktop application menu!)*
 
 ---
 

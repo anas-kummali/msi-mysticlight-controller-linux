@@ -13,7 +13,7 @@ if [[ -z "${BIN_DIR:-}" || -z "${SCRIPT_DIR:-}" ]]; then
     exit 1
 fi
 
-echo "=== MSI Mystic Light Controller & GUI Installer (v1.1.0) ==="
+echo "=== MSI Mystic Light Controller & GUI Installer (v1.2.0) ==="
 
 # 1. Check Cargo / Rust toolchain
 if ! command -v cargo &>/dev/null; then

@@ -1,5 +1,5 @@
 Name:           msi-mysticlight
-Version:        1.1.0
+Version:        1.2.0
 Release:        1%{?dist}
 Summary:        MSI Mystic Light Controller & GUI for Linux
 License:        GPL-3.0-only
@@ -52,3 +52,4 @@ udevadm trigger 2>/dev/null || :
 %{_userunitdir}/msi-keyboard-resume.service
 %{_datadir}/applications/msi-mysticlight.desktop
 %{_datadir}/icons/hicolor/scalable/apps/msi-mysticlight.svg
+
