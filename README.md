@@ -2,16 +2,23 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Rust: 2021](https://img.shields.io/badge/Rust-2021%20Edition-red.svg)](https://www.rust-lang.org/)
-[![Python: 3.8+](https://img.shields.io/badge/Python-3.8%2B-brightgreen.svg)](https://www.python.org/)
 [![Platform: Linux hidraw](https://img.shields.io/badge/Platform-Linux%20hidraw-orange.svg)](https://kernel.org/)
 [![Dependencies: Zero](https://img.shields.io/badge/Dependencies-Zero%20(Pure%20Stdlib)-blue.svg)]()
+[![Binary: 564KB](https://img.shields.io/badge/Binary-564%20KB-success.svg)]()
 [![Hardware: 24--Zone RGB](https://img.shields.io/badge/Hardware-24--Zone%20RGB-purple.svg)]()
 
-A high-performance, zero-external-dependency Linux driver and command-line controller for **MSI Gaming Laptop Keyboard Backlights** (including **MSI Vector 16 HX AI**, **Vector A18 HX**, **Crosshair 16**, **Katana**, **Pulse**, and **Raider** series).
-
-Available as an **optimized native Rust binary** (564 KB, instant execution, zero crate dependencies) and a **pure Python CLI / library**.
+A high-performance, 100% pure Rust driver and command-line controller for **MSI Gaming Laptop Keyboard Backlights** (including **MSI Vector 16 HX AI**, **Vector A18 HX**, **Crosshair 16**, **Katana**, **Pulse**, and **Raider** series).
 
 This driver resolves the notorious **"Keyboard backlight only works in first 3 rows"** issue on Linux, providing complete control over all 6 physical rows, 24 individual zones, animations, and sleep/resume persistence.
+
+---
+
+## Key Highlights
+
+* **100% Pure Rust Standard Library:** Zero external crate dependencies. Employs direct POSIX `ioctl` calls on Linux `/dev/hidraw*`.
+* **Zero Network Dependency:** Compiles offline in **< 0.3 seconds** without crates.io registry downloads.
+* **Minimal Footprint:** Standalone release binary is only **564 KB** with sub-millisecond invocation time.
+* **Zero CPU Utilization:** All animations and color states are processed directly on-chip by the keyboard hardware microcontroller.
 
 ---
 
@@ -39,7 +46,6 @@ On modern MSI laptops equipped with multi-zone Mystic Light keyboards (e.g. USB 
 * **Full-Matrix Mode Packets:** Sets unmasked filter flags (`0xFF`) in Format B mode reports, broadcasting RGB parameters across all rows.
 * **OEM MSI Center Hardware Slot:** Concurrently updates register slot `0x58`, matching OEM Windows software behavior.
 * **Granular Control:** Supports full-board lighting, individual row targeting (`-r 1` through `-r 6`), and individual zone addressing (`-z 0` through `-z 23`).
-* **Zero Dependencies:** Pure Python standard library interacting with Linux `/dev/hidraw*`. No background daemons, bloated runtimes, or CPU usage during static lighting or hardware-driven animations.
 
 ---
 
@@ -68,26 +74,18 @@ cd msi-mysticlight-controller-linux
 ```
 
 The installer will:
-1. Automatically compile the optimized **Rust native binary** (`target/release/msi-mysticlight`, 564 KB) if `cargo` is present, or configure the Python wrapper as fallback.
-2. Link aliases `msi-keyboard` and `msi-rgb` into `~/.local/bin/`.
+1. Compile the optimized **Rust release binary** (`target/release/msi-mysticlight`) using `cargo`.
+2. Install the executable and link aliases `msi-keyboard` and `msi-rgb` into `~/.local/bin/`.
 3. Configure `/etc/udev/rules.d/99-msi-mysticlight.rules` for secure non-root hardware access (`0660` + `uaccess`).
 4. Install hardened systemd user units for backlight persistence on boot and resume after suspend.
 
-### Method 2: Compile Manually with Cargo (Rust)
-
-Because the driver has **zero external crate dependencies** (standard library only with POSIX `ioctl`), compilation takes less than 1 second and works offline without downloading from crates.io:
+### Method 2: Manual Cargo Build
 
 ```bash
 cargo build --release
 cp target/release/msi-mysticlight ~/.local/bin/
-```
-
-### Method 3: Python / Pipx
-
-```bash
-pip install .
-# or for an isolated environment:
-pipx install .
+ln -sf ~/.local/bin/msi-mysticlight ~/.local/bin/msi-keyboard
+ln -sf ~/.local/bin/msi-mysticlight ~/.local/bin/msi-rgb
 ```
 
 To configure non-root udev rules manually:
@@ -171,7 +169,7 @@ msi-mysticlight --status
  MSI Mystic Light Controller for Linux
  Version : 1.0.0
 ==================================================
-Device Node     : /dev/hidraw3
+Device Node     : /dev/hidraw0
 Hardware Status : Online
 Permissions     : Read/Write (OK)
 Total Zones     : 24 Zones
@@ -201,27 +199,21 @@ systemctl --user enable msi-keyboard-resume.service
 
 ## Testing & Quality
 
-### 1. Rust Unit Tests
-Run the high-speed Rust unit test suite:
+### 1. Test Suite (`cargo test`)
+Run the complete unit and CLI integration test suite:
 ```bash
 cargo test
 ```
 
-### 2. Python Test Suite
-Run the Python test suite:
-```bash
-pytest
-```
+### 2. Multi-Distribution Verification
 
-### 3. Multi-Distribution Testing (Without Installing)
-
-You can run the full test suite across isolated clean containers of **Ubuntu 26.10**, **Ubuntu 26.04 LTS**, **Debian Sid**, **Debian 12**, **Arch Linux**, **openSUSE Tumbleweed**, and **Alpine Linux (musl)** using Podman or Docker with zero modifications to your host OS:
+Verify the release binary and test suite across containerized distributions (Ubuntu 26.10, Ubuntu 26.04 LTS, Debian Sid, Arch Linux, openSUSE Tumbleweed):
 
 ```bash
-# Run unit tests across all 7 distributions:
+# Run multi-distro test suite:
 ./scripts/test_distros.sh
 
-# Run multi-distro tests with live USB HID hardware passthrough:
+# Run with live USB HID hardware passthrough:
 ./scripts/test_distros.sh --live
 ```
 

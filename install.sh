@@ -11,51 +11,28 @@ if [[ -z "${BIN_DIR:-}" || -z "${SCRIPT_DIR:-}" ]]; then
     exit 1
 fi
 
-echo "=== MSI Mystic Light Controller for Linux Installer ==="
+echo "=== MSI Mystic Light Controller for Linux Installer (Rust Edition) ==="
 
-# 1. Ensure bin dir exists
+# 1. Check Cargo / Rust toolchain
+if ! command -v cargo &>/dev/null; then
+    echo "Error: 'cargo' is not found in PATH." >&2
+    echo "Please install Rust (e.g., 'curl --proto \"=https\" --tlsv1.2 -sSf https://sh.rustup.rs | sh' or via your distribution package manager)." >&2
+    exit 1
+fi
+
+# 2. Ensure bin dir exists
 mkdir -p "${BIN_DIR}"
 
-# 2. Install executable (Rust binary preferred, Python fallback)
-echo "[1/4] Installing executable to ${BIN_DIR}/msi-mysticlight..."
-if command -v cargo &>/dev/null; then
-    echo "      Compiling optimized Rust release binary with Cargo..."
-    cargo build --release --manifest-path "${SCRIPT_DIR}/Cargo.toml" --quiet
-    cp -f "${SCRIPT_DIR}/target/release/msi-mysticlight" "${BIN_DIR}/msi-mysticlight"
-    chmod 755 "${BIN_DIR}/msi-mysticlight"
-    echo "      Installed native Rust binary (564 KB, sub-millisecond execution)."
-else
-    echo "      Cargo not found, installing Python wrapper..."
-    cat << EOF > "${BIN_DIR}/msi-mysticlight"
-#!/usr/bin/env python3
-import sys
-import os
-
-repo_src = os.path.normpath("${SCRIPT_DIR}/src")
-if os.path.isdir(repo_src) and repo_src not in sys.path:
-    sys.path.insert(0, repo_src)
-
-from msi_keyboard.cli import main
-
-if __name__ == "__main__":
-    main()
-EOF
-    chmod 755 "${BIN_DIR}/msi-mysticlight"
-fi
-
+# 3. Compile and install optimized release binary
+echo "[1/4] Compiling optimized Rust release binary..."
+cargo build --release --manifest-path "${SCRIPT_DIR}/Cargo.toml" --quiet
+cp -f "${SCRIPT_DIR}/target/release/msi-mysticlight" "${BIN_DIR}/msi-mysticlight"
+chmod 755 "${BIN_DIR}/msi-mysticlight"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-keyboard"
 ln -sf "${BIN_DIR}/msi-mysticlight" "${BIN_DIR}/msi-rgb"
+echo "      Installed native Rust binary to ${BIN_DIR}/msi-mysticlight (564 KB)."
 
-# Also install python package if pip/uv available
-if command -v pip &>/dev/null; then
-    echo "      Installing Python package via pip..."
-    python3 -m pip install -e "${SCRIPT_DIR}" --quiet || true
-elif command -v uv &>/dev/null; then
-    echo "      Installing Python package via uv..."
-    uv pip install -e "${SCRIPT_DIR}" --quiet || true
-fi
-
-# 3. Install udev rule
+# 4. Install udev rule for non-root access
 echo "[2/4] Setting up udev rules for non-root USB access..."
 if [ -f "${UDEV_DIR}/99-msi-mysticlight.rules" ] && grep -q "1603" "${UDEV_DIR}/99-msi-mysticlight.rules" 2>/dev/null; then
     echo "      Udev rule already active in ${UDEV_DIR}/99-msi-mysticlight.rules."
@@ -71,7 +48,7 @@ else
     echo "      You may need to manually copy packaging/99-msi-mysticlight.rules to ${UDEV_DIR}/."
 fi
 
-# 4. Install systemd user service for auto-start and wake resume
+# 5. Install systemd user service for auto-start and wake resume
 echo "[3/4] Installing systemd user services..."
 mkdir -p "${SYSTEMD_USER_DIR}"
 cp "${SCRIPT_DIR}/packaging/systemd/msi-keyboard.service" "${SYSTEMD_USER_DIR}/"
@@ -80,9 +57,10 @@ cp "${SCRIPT_DIR}/packaging/systemd/msi-keyboard-resume.service" "${SYSTEMD_USER
 if command -v systemctl &>/dev/null; then
     systemctl --user daemon-reload || true
     systemctl --user enable msi-keyboard.service 2>/dev/null || true
+    systemctl --user enable msi-keyboard-resume.service 2>/dev/null || true
 fi
 
-# 5. Test execution
+# 6. Test execution
 echo "[4/4] Verifying keyboard hardware status..."
 if "${BIN_DIR}/msi-mysticlight" --status; then
     echo ""

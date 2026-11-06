@@ -2,15 +2,15 @@
 name = "msi-mysticlight"
 version = "1.0.0"
 edition = "2021"
-authors = ["Anas"]
+authors = ["Anas Kummali <anas@milkbun.in>"]
 description = "MSI Mystic Light Controller for Linux (24-Zone & 4-Zone Keyboards)"
 license = "GPL-3.0"
 readme = "README.md"
 
 [lib]
 name = "msi_mysticlight"
-path = "rust/src/lib.rs"
+path = "src/lib.rs"
 
 [[bin]]
 name = "msi-mysticlight"
-path = "rust/src/main.rs"
+path = "src/main.rs"
