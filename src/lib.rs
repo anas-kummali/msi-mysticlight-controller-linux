@@ -3,6 +3,7 @@
 //! High-performance controller and GUI for MSI MysticLight
 //! 24-Zone and 4-Zone keyboard backlights on Linux.
 
+pub mod bridge;
 pub mod cli;
 pub mod color;
 pub mod constants;

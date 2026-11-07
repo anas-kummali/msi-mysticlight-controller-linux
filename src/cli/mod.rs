@@ -76,6 +76,15 @@ pub fn execute() -> i32 {
         return 0;
     }
 
+    if args.bridge {
+        let initial_color = parse_color(&args.color, 10).ok();
+        if let Err(e) = crate::bridge::run_bridge(initial_color) {
+            eprintln!("\n[Bridge Error] {}", e);
+            return 1;
+        }
+        return 0;
+    }
+
     // Validate color argument before opening hardware device
     let raw_rgb = match parse_color(&args.color, 10) {
         Ok(c) => c,
@@ -100,6 +109,10 @@ pub fn execute() -> i32 {
             eprintln!("Error powering off keyboard: {}", e);
             return 1;
         }
+        let mut state = crate::bridge::BridgeState::load();
+        state.brightness = 0;
+        state.save();
+        let _ = std::fs::write("/sys/class/leds/msi::kbd_backlight/brightness", "0");
         println!("Keyboard backlight turned OFF across all 6 rows.");
         return 0;
     }
@@ -158,6 +171,18 @@ pub fn execute() -> i32 {
         eprintln!("Error setting keyboard color: {}", e);
         return 1;
     }
+
+    let state = crate::bridge::BridgeState {
+        r: raw_rgb.0,
+        g: raw_rgb.1,
+        b: raw_rgb.2,
+        brightness: args.brightness,
+    };
+    state.save();
+    let _ = std::fs::write(
+        "/sys/class/leds/msi::kbd_backlight/brightness",
+        format!("{}", args.brightness),
+    );
 
     let target = if let Some(r) = args.row {
         format!("Row {}", r)

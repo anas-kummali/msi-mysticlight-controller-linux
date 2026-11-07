@@ -27,3 +27,9 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0db0", ATTRS{idProduct}=="1606", MODE="06
 
 # MSI Stealth / Raider (MS-1564)
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1462", ATTRS{idProduct}=="1564", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+
+# Linux Userspace LED Subsystem bridge (/dev/uleds)
+# Allows the active desktop session user to expose /sys/class/leds/msi::kbd_backlight
+# to UPower, COSMIC Desktop, GNOME, KDE, and laptop backlight hotkeys.
+KERNEL=="uleds", SUBSYSTEM=="misc", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+ACTION=="add", SUBSYSTEM=="leds", KERNEL=="msi::kbd_backlight", TAG+="uaccess"

@@ -369,6 +369,43 @@ systemctl --user enable --now msi-keyboard-resume.service
 
 ---
 
+## 🎛️ Linux OS Tray & Desktop Integration (Fixing the `NaN%` Slider)
+
+If you are using **COSMIC Desktop**, **GNOME**, or **KDE Plasma**, you may notice that the desktop's system tray battery/power applet shows a disabled keyboard backlight slider stuck at **`NaN%`**:
+
+<div align="center">
+  <img src="assets/producthunt/producthunt_slide_5_diagnostics.png" width="600" alt="Diagnostics and Power" />
+</div>
+
+### Why Does This Happen?
+1. **Proprietary USB HID Architecture:** MSI laptops do not route keyboard backlight through standard motherboard ACPI/WMI tables. Instead, the keyboard is an internal USB HID controller (`/dev/hidraw*`).
+2. **Missing Kernel Driver:** Because there is no in-tree Linux ACPI driver for MSI Mystic Light, the kernel creates no `/sys/class/leds/*::kbd_backlight` sysfs node.
+3. **UPower Zero Division:** `upowerd` reports `max_brightness = 0`. When desktop applets calculate `100.0 * (brightness / max_brightness)`, `0 / 0` evaluates to **`NaN` (`NaN%`)**, locking the slider.
+
+### The Pure Rust `uleds` Sysfs Bridge
+MSI Mystic Light includes a built-in userspace bridge daemon (`msi-mysticlight --bridge`) powered by the Linux kernel's `uleds` driver. It exposes a native `/sys/class/leds/msi::kbd_backlight` device to UPower:
+
+- ✅ **Working OS Tray Slider:** Instantly converts `NaN%` into a smooth `0%..100%` slider across 10 native hardware brightness levels.
+- ✅ **Two-Way Synchronization:** Adjusting the tray slider changes physical keyboard brightness in real time; adjusting brightness in the GUI or CLI updates the OS tray slider.
+- ✅ **Laptop Fn Hotkeys:** Laptop keyboard brightness shortcuts handled by the desktop environment work out of the box.
+
+### One-Time Setup:
+```bash
+# 1. Load and persist the kernel uleds module
+sudo modprobe uleds
+echo "uleds" | sudo tee /etc/modules-load.d/uleds.conf
+
+# 2. Install udev rules for unprivileged user access
+sudo cp packaging/99-msi-mysticlight.rules /etc/udev/rules.d/
+sudo udevadm control --reload && sudo udevadm trigger
+
+# 3. Enable the user bridge service
+systemctl --user daemon-reload
+systemctl --user enable --now msi-mysticlight-bridge.service
+```
+
+---
+
 ## 🏗️ Codebase Architecture & Modularization
 
 The codebase follows strict separation of concerns, Single Responsibility Principle (SRP), and zero-cost abstraction patterns:

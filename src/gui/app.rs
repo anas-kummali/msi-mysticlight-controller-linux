@@ -81,6 +81,8 @@ impl MysticLightApp {
             _ => NavigationTab::Studio,
         };
 
+        let saved_state = crate::bridge::BridgeState::load();
+
         Self {
             ctrl,
             device_info: info,
@@ -89,9 +91,13 @@ impl MysticLightApp {
             active_tab,
             selected_zones: BTreeSet::new(),
             zone_colors,
-            color_rgb: [1.0, 1.0, 1.0],
-            hex_input: "#FFFFFF".to_string(),
-            brightness: 10,
+            color_rgb: [
+                saved_state.r as f32 / 255.0,
+                saved_state.g as f32 / 255.0,
+                saved_state.b as f32 / 255.0,
+            ],
+            hex_input: format!("#{:02X}{:02X}{:02X}", saved_state.r, saved_state.g, saved_state.b),
+            brightness: saved_state.brightness,
             active_effect: ActiveEffect::None,
             wave_speed: 200,
             cycle_speed: 150,
@@ -392,6 +398,14 @@ impl eframe::App for MysticLightApp {
                         self.brightness = b;
                         let rgb = self.current_rgb();
                         let _ = self.ctrl.set_color(rgb.r, rgb.g, rgb.b, b, None, None);
+                        let _ = std::fs::write("/sys/class/leds/msi::kbd_backlight/brightness", format!("{}", b));
+                        let state = crate::bridge::BridgeState {
+                            r: rgb.r,
+                            g: rgb.g,
+                            b: rgb.b,
+                            brightness: b,
+                        };
+                        state.save();
                     }
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {

@@ -15,6 +15,7 @@ pub struct CliArgs {
     pub zone: Option<u8>,
     pub status: bool,
     pub gui: bool,
+    pub bridge: bool,
     pub show_version: bool,
     pub show_help: bool,
 }
@@ -32,6 +33,7 @@ impl Default for CliArgs {
             zone: None,
             status: false,
             gui: false,
+            bridge: false,
             show_version: false,
             show_help: false,
         }
@@ -58,6 +60,8 @@ pub fn parse_from(raw: Vec<String>) -> Result<CliArgs, String> {
             return Ok(args);
         } else if arg == "--status" {
             args.status = true;
+        } else if arg == "--bridge" || arg == "--daemon" || arg == "bridge" || arg == "daemon" {
+            args.bridge = true;
         } else if arg == "--gui" || arg == "-g" {
             args.gui = true;
         } else if arg == "-o" || arg == "--off" {
@@ -180,6 +184,10 @@ mod tests {
         assert!(parse_from(to_vec(&["-w"])).unwrap().wave);
         assert!(parse_from(to_vec(&["-b"])).unwrap().breathe);
         assert!(parse_from(to_vec(&["-s"])).unwrap().cycle);
+        assert!(parse_from(to_vec(&["--bridge"])).unwrap().bridge);
+        assert!(parse_from(to_vec(&["--daemon"])).unwrap().bridge);
+        assert!(parse_from(to_vec(&["bridge"])).unwrap().bridge);
+        assert!(parse_from(to_vec(&["daemon"])).unwrap().bridge);
     }
 
     #[test]
